@@ -131,10 +131,8 @@ body {
   background:
     radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 55%),
     #050816;
-  aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
-  padding: 0.65rem;
+  aspect-ratio: 1.04 / 1;
+  padding: 0.42rem;
 }
 
 .video-media-shell {
@@ -146,32 +144,24 @@ body {
 }
 
 .video-media {
-  height: 100%;
   width: 100%;
-  object-fit: contain;
-  transform: scale(0.92);
-  transform-origin: center;
+  height: 100%;
+  object-fit: cover;
+  object-position: left top;
+  display: block;
 }
 
 @media (min-width: 768px) {
   .video-wrapper {
-    aspect-ratio: 1.08 / 1;
-    padding: 0.8rem;
-  }
-
-  .video-media {
-    transform: scale(0.9);
+    aspect-ratio: 1.06 / 1;
+    padding: 0.5rem;
   }
 }
 
 @media (min-width: 1280px) {
   .video-wrapper {
-    aspect-ratio: 1.16 / 1;
-    padding: 0.95rem;
-  }
-
-  .video-media {
-    transform: scale(0.88);
+    aspect-ratio: 1.1 / 1;
+    padding: 0.56rem;
   }
 }
 

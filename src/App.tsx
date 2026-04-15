@@ -331,10 +331,10 @@ export default function App() {
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="mailto:wagner@wvtechsolutions.com.br"
+                href="mailto:wagner@wvtecsolutions.com.br"
                 className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/5"
               >
-                contato@wvtechsolutions.com.br
+                wagner@wvtecsolutions.com.br
               </a>
               <a
                 href="#top"
