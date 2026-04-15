@@ -1,1 +1,186 @@
 @import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #020617;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 30%),
+    #020617;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.hero-shell {
+  position: relative;
+  overflow: clip;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 88%);
+  pointer-events: none;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.34;
+  pointer-events: none;
+  animation: floatOrb 16s ease-in-out infinite;
+}
+
+.hero-orb-cyan {
+  top: 6rem;
+  left: -4rem;
+  height: 18rem;
+  width: 18rem;
+  background: rgba(6, 182, 212, 0.22);
+}
+
+.hero-orb-blue {
+  top: 12rem;
+  right: 4%;
+  height: 20rem;
+  width: 20rem;
+  background: rgba(37, 99, 235, 0.24);
+  animation-delay: -6s;
+}
+
+.hero-orb-violet {
+  bottom: 10rem;
+  right: 28%;
+  height: 16rem;
+  width: 16rem;
+  background: rgba(139, 92, 246, 0.18);
+  animation-delay: -10s;
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.25rem;
+  width: 3.25rem;
+  border-radius: 9999px;
+  padding: 0.16rem;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.95), rgba(59, 130, 246, 0.72));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(34, 211, 238, 0.18),
+    0 12px 30px rgba(2, 6, 23, 0.4);
+}
+
+.video-frame-shell {
+  position: relative;
+}
+
+.video-frame-shell::before {
+  content: "";
+  position: absolute;
+  inset: 7% 10% auto;
+  height: 68%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.14), rgba(99, 102, 241, 0.16));
+  filter: blur(55px);
+  z-index: 0;
+}
+
+.video-frame {
+  position: relative;
+  z-index: 1;
+  border-radius: 2rem;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 22px 60px rgba(2, 6, 23, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.video-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0.2rem 0.85rem;
+}
+
+.video-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 55%),
+    #050816;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  padding: 0.65rem;
+}
+
+.video-media-shell {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgba(2, 6, 23, 0.95);
+}
+
+.video-media {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  transform: scale(0.92);
+  transform-origin: center;
+}
+
+@media (min-width: 768px) {
+  .video-wrapper {
+    aspect-ratio: 1.08 / 1;
+    padding: 0.8rem;
+  }
+
+  .video-media {
+    transform: scale(0.9);
+  }
+}
+
+@media (min-width: 1280px) {
+  .video-wrapper {
+    aspect-ratio: 1.16 / 1;
+    padding: 0.95rem;
+  }
+
+  .video-media {
+    transform: scale(0.88);
+  }
+}
+
+@keyframes floatOrb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) scale(1.06);
+  }
+}
