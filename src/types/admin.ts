@@ -38,8 +38,28 @@ export type AdminAvailabilityDayItem = {
   slots: AdminAvailabilitySlotItem[]
 }
 
+export type AdminBookingHistoryItem = {
+  id: number
+  booking_date: string | null
+  start_time: string | null
+  end_time: string | null
+  display_label: string
+  status: string
+  meeting_status: string
+  name: string
+  email: string
+  phone: string
+  subject_summary: string
+  meet_url: string | null
+  meeting_notes: string | null
+  transcript_summary: string | null
+  has_transcript: boolean
+  created_at: string
+}
+
 export type AdminAvailabilityListResponse = {
   days: AdminAvailabilityDayItem[]
+  history: AdminBookingHistoryItem[]
 }
 
 export type AdminDayUpsertPayload = {

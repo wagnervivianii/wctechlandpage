@@ -17,6 +17,7 @@ export default function AdminPage() {
 
   const {
     days,
+    history,
     loadingDays,
     submitting,
     availabilityError,
@@ -85,6 +86,7 @@ export default function AdminPage() {
               <AdminAvailabilityManager
                 username={currentUser.username}
                 days={days}
+                history={history}
                 loadingDays={loadingDays}
                 submitting={submitting}
                 error={availabilityError}
