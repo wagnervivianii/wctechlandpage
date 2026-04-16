@@ -12,6 +12,15 @@ function isAdminPath(pathname: string) {
   return pathname === '/admin' || pathname === '/admin/'
 }
 
+function getAdminHistoryEventId(pathname: string) {
+  const match = pathname.match(/^\/admin\/historico\/(\d+)\/?$/)
+  if (!match) {
+    return null
+  }
+
+  return Number(match[1])
+}
+
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [pathname, setPathname] = useState(() => window.location.pathname)
@@ -22,12 +31,18 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
+  const historyEventId = getAdminHistoryEventId(pathname)
+
   if (isSchedulePath(pathname)) {
     return <BookingPage />
   }
 
   if (isAdminPath(pathname)) {
     return <AdminPage />
+  }
+
+  if (historyEventId !== null) {
+    return <AdminPage historyEventId={historyEventId} />
   }
 
   return <LandingPage mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />

@@ -1,9 +1,14 @@
 import AdminAvailabilityManager from '../components/admin/AdminAvailabilityManager'
+import AdminHistoryEventDetail from '../components/admin/AdminHistoryEventDetail'
 import AdminLoginCard from '../components/admin/AdminLoginCard'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useAdminAvailability } from '../hooks/useAdminAvailability'
 
-export default function AdminPage() {
+type AdminPageProps = {
+  historyEventId?: number | null
+}
+
+export default function AdminPage({ historyEventId = null }: AdminPageProps) {
   const {
     token,
     currentUser,
@@ -82,7 +87,11 @@ export default function AdminPage() {
               <AdminLoginCard loading={loginLoading} error={authError} onSubmit={login} />
             ) : null}
 
-            {!authLoading && isAuthenticated && currentUser ? (
+            {!authLoading && isAuthenticated && currentUser && historyEventId !== null ? (
+              <AdminHistoryEventDetail history={history} eventId={historyEventId} />
+            ) : null}
+
+            {!authLoading && isAuthenticated && currentUser && historyEventId === null ? (
               <AdminAvailabilityManager
                 username={currentUser.username}
                 days={days}
