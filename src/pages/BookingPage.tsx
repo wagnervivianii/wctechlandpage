@@ -1,13 +1,19 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
-import BookingHostCard from '../components/booking/BookingHostCard'
-import CalendarPanel from '../components/booking/CalendarPanel'
+import BookingDayView from '../components/booking/BookingDayView'
 import BookingForm from '../components/booking/BookingForm'
-import TimeSlotPicker from '../components/booking/TimeSlotPicker'
+import BookingHeader from '../components/booking/BookingHeader'
+import BookingHostCard from '../components/booking/BookingHostCard'
+import BookingMonthView from '../components/booking/BookingMonthView'
+import BookingViewModeSwitcher from '../components/booking/BookingViewModeSwitcher'
+import BookingWeekView from '../components/booking/BookingWeekView'
 import { useBookingCalendar } from '../hooks/useBookingCalendar'
 import { useBookingForm } from '../hooks/useBookingForm'
+import type { BookingViewMode } from '../types/booking'
 
 export default function BookingPage() {
+  const [viewMode, setViewMode] = useState<BookingViewMode>('day')
+
   const {
     months,
     slots,
@@ -76,18 +82,44 @@ export default function BookingPage() {
     [handleSubmit],
   )
 
-  const slotsPicker = useMemo(
-    () => (
-      <TimeSlotPicker
-        slots={slots}
-        loading={loadingSlots}
-        error={slotsError}
-        selectedSlotId={selectedSlotId}
-        onSelectSlot={handleTimeSlotSelection}
-      />
-    ),
-    [slots, loadingSlots, slotsError, selectedSlotId, handleTimeSlotSelection],
-  )
+  const calendarView = useMemo(() => {
+    const commonProps = {
+      months,
+      loading: loadingCalendar,
+      error: calendarError,
+      selectedDate,
+      selectedDayLabel,
+      slots,
+      loadingSlots,
+      slotsError,
+      selectedSlotId,
+      onSelectDate: handleCalendarDateSelection,
+      onSelectSlot: handleTimeSlotSelection,
+    }
+
+    if (viewMode === 'week') {
+      return <BookingWeekView {...commonProps} />
+    }
+
+    if (viewMode === 'month') {
+      return <BookingMonthView {...commonProps} />
+    }
+
+    return <BookingDayView {...commonProps} />
+  }, [
+    months,
+    loadingCalendar,
+    calendarError,
+    selectedDate,
+    selectedDayLabel,
+    slots,
+    loadingSlots,
+    slotsError,
+    selectedSlotId,
+    handleCalendarDateSelection,
+    handleTimeSlotSelection,
+    viewMode,
+  ])
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -147,14 +179,11 @@ export default function BookingPage() {
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <CalendarPanel
-              months={months}
-              loading={loadingCalendar}
-              error={calendarError}
-              selectedDate={selectedDate}
-              selectedDayLabel={selectedDayLabel}
-              onSelectDate={handleCalendarDateSelection}
-            />
+            <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)] backdrop-blur sm:p-6">
+              <BookingHeader selectedDayLabel={selectedDayLabel} />
+              <BookingViewModeSwitcher value={viewMode} onChange={setViewMode} />
+              {calendarView}
+            </section>
 
             <BookingForm
               form={form}
@@ -170,7 +199,7 @@ export default function BookingPage() {
               onPhoneChange={handlePhoneChange}
               onSummaryChange={handleSummaryChange}
               onSubmit={submitHandler}
-              slotsPicker={slotsPicker}
+              slotsPicker={null}
             />
           </div>
         </main>
