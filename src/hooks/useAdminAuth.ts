@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { AdminApiError, adminApiClient } from '../services/AdminApiClient'
 import type { AdminMeResponse } from '../types/admin'
@@ -62,7 +62,7 @@ export function useAdminAuth() {
     }
   }, [token])
 
-  async function login(username: string, password: string) {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       setLoginLoading(true)
       setAuthError('')
@@ -82,14 +82,18 @@ export function useAdminAuth() {
     } finally {
       setLoginLoading(false)
     }
-  }
+  }, [])
 
-  function logout() {
+  const logout = useCallback(() => {
     localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY)
     setToken('')
     setCurrentUser(null)
     setAuthError('')
-  }
+  }, [])
+
+  const clearAuthError = useCallback(() => {
+    setAuthError('')
+  }, [])
 
   return {
     token,
@@ -100,6 +104,6 @@ export function useAdminAuth() {
     isAuthenticated: Boolean(token && currentUser?.authenticated),
     login,
     logout,
-    clearAuthError: () => setAuthError(''),
+    clearAuthError,
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { bookingApiClient } from '../services/BookingApiClient'
 import type { AvailabilitySlot, CalendarDay, CalendarMonth } from '../types/booking'
@@ -47,6 +47,7 @@ export function useBookingCalendar() {
     }
 
     void loadCalendar()
+
     return () => {
       cancelled = true
     }
@@ -87,6 +88,7 @@ export function useBookingCalendar() {
     }
 
     void loadSlots()
+
     return () => {
       cancelled = true
     }
@@ -95,14 +97,14 @@ export function useBookingCalendar() {
   const allDays = useMemo(() => flattenCalendarDays(months), [months])
   const selectedDay: CalendarDay | null = allDays.find((day) => day.date === selectedDate) ?? null
 
-  function handleDateSelection(date: string) {
+  const handleDateSelection = useCallback((date: string) => {
     setSelectedDate(date)
     setSelectedSlotId('')
-  }
+  }, [])
 
-  function handleSlotSelection(slotId: string) {
+  const handleSlotSelection = useCallback((slotId: string) => {
     setSelectedSlotId(slotId)
-  }
+  }, [])
 
   return {
     months,

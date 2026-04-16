@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 import type { AvailabilitySlot } from '../../types/booking'
 
 type TimeSlotPickerProps = {
@@ -8,7 +10,7 @@ type TimeSlotPickerProps = {
   onSelectSlot: (slotId: string) => void
 }
 
-export default function TimeSlotPicker({
+function TimeSlotPickerComponent({
   slots,
   loading,
   error,
@@ -59,3 +61,7 @@ export default function TimeSlotPicker({
     </div>
   )
 }
+
+const TimeSlotPicker = memo(TimeSlotPickerComponent)
+
+export default TimeSlotPicker

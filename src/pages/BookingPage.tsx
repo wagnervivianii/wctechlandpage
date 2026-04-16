@@ -1,3 +1,6 @@
+import { useCallback, useMemo } from 'react'
+
+import BookingHostCard from '../components/booking/BookingHostCard'
 import CalendarPanel from '../components/booking/CalendarPanel'
 import BookingForm from '../components/booking/BookingForm'
 import TimeSlotPicker from '../components/booking/TimeSlotPicker'
@@ -19,6 +22,10 @@ export default function BookingPage() {
     handleSlotSelection,
   } = useBookingCalendar()
 
+  const handleBookingSubmitSuccess = useCallback(() => {
+    handleSlotSelection('')
+  }, [handleSlotSelection])
+
   const {
     form,
     fieldErrors,
@@ -35,18 +42,52 @@ export default function BookingPage() {
     clearMessages,
   } = useBookingForm({
     selectedSlotId,
-    onSubmitSuccess: () => {
-      handleSlotSelection('')
-    },
+    onSubmitSuccess: handleBookingSubmitSuccess,
   })
 
-  const selectedDayLabel = selectedDay
-    ? `${selectedDay.weekday_label}, ${selectedDay.day_label} de ${selectedDay.month_label}`
-    : undefined
+  const selectedDayLabel = useMemo(() => {
+    if (!selectedDay) {
+      return undefined
+    }
 
-  const submitHandler: React.FormEventHandler<HTMLFormElement> = async (event) => {
-    await handleSubmit(event)
-  }
+    return `${selectedDay.weekday_label}, ${selectedDay.day_label} de ${selectedDay.month_label}`
+  }, [selectedDay])
+
+  const handleCalendarDateSelection = useCallback(
+    (date: string) => {
+      clearMessages()
+      handleDateSelection(date)
+    },
+    [clearMessages, handleDateSelection],
+  )
+
+  const handleTimeSlotSelection = useCallback(
+    (slotId: string) => {
+      clearMessages()
+      handleSlotSelection(slotId)
+    },
+    [clearMessages, handleSlotSelection],
+  )
+
+  const submitHandler: React.FormEventHandler<HTMLFormElement> = useCallback(
+    async (event) => {
+      await handleSubmit(event)
+    },
+    [handleSubmit],
+  )
+
+  const slotsPicker = useMemo(
+    () => (
+      <TimeSlotPicker
+        slots={slots}
+        loading={loadingSlots}
+        error={slotsError}
+        selectedSlotId={selectedSlotId}
+        onSelectSlot={handleTimeSlotSelection}
+      />
+    ),
+    [slots, loadingSlots, slotsError, selectedSlotId, handleTimeSlotSelection],
+  )
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -102,51 +143,7 @@ export default function BookingPage() {
               Exibimos apenas o mês vigente e o próximo mês, com os dias e horários que você liberar na agenda da WV.
             </p>
 
-            <div className="mx-auto mt-8 max-w-md sm:max-w-xl">
-              <div className="rounded-[1.6rem] border border-white/10 bg-slate-900/75 p-4 shadow-[0_18px_60px_rgba(2,6,23,0.32)] backdrop-blur sm:p-5">
-                <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:gap-5 sm:text-left">
-                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-[1.4rem] border border-cyan-400/20 bg-slate-800 shadow-[0_0_24px_rgba(34,211,238,0.12)]">
-                    <img
-                      src="/images/wagner_agenda.webp"
-                      alt="Wagner Viviani"
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(event) => {
-                        const target = event.currentTarget
-
-                        if (!target.dataset.fallbackStep) {
-                          target.dataset.fallbackStep = '1'
-                          target.src = '/images/wagner_agenda.jpg'
-                          return
-                        }
-
-                        if (target.dataset.fallbackStep === '1') {
-                          target.dataset.fallbackStep = '2'
-                          target.src = '/imagens/wagner_agenda.webp'
-                          return
-                        }
-
-                        if (target.dataset.fallbackStep === '2') {
-                          target.dataset.fallbackStep = '3'
-                          target.src = '/imagens/wagner_agenda.jpg'
-                        }
-                      }}
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.34em] text-cyan-300 sm:text-[0.72rem]">
-                      Quem conduzirá a conversa
-                    </p>
-                    <p className="mt-2 text-xl font-semibold text-white">Wagner Viviani</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">
-                      Você falará diretamente com quem vai entender seu contexto, analisar o cenário atual e conduzir
-                      o diagnóstico inicial da sua demanda.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <BookingHostCard />
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -156,10 +153,7 @@ export default function BookingPage() {
               error={calendarError}
               selectedDate={selectedDate}
               selectedDayLabel={selectedDayLabel}
-              onSelectDate={(date) => {
-                clearMessages()
-                handleDateSelection(date)
-              }}
+              onSelectDate={handleCalendarDateSelection}
             />
 
             <BookingForm
@@ -176,18 +170,7 @@ export default function BookingPage() {
               onPhoneChange={handlePhoneChange}
               onSummaryChange={handleSummaryChange}
               onSubmit={submitHandler}
-              slotsPicker={
-                <TimeSlotPicker
-                  slots={slots}
-                  loading={loadingSlots}
-                  error={slotsError}
-                  selectedSlotId={selectedSlotId}
-                  onSelectSlot={(slotId) => {
-                    clearMessages()
-                    handleSlotSelection(slotId)
-                  }}
-                />
-              }
+              slotsPicker={slotsPicker}
             />
           </div>
         </main>

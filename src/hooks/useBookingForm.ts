@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { bookingApiClient } from '../services/BookingApiClient'
@@ -47,31 +47,34 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
   const hasClientErrors = Object.values(validationErrors).some(Boolean)
   const summaryLength = form.subject_summary.length
 
-  function updateField<K extends keyof BookingRequestPayload>(field: K, value: BookingRequestPayload[K]) {
-    setForm((current) => ({ ...current, [field]: value }))
-  }
+  const updateField = useCallback(
+    <K extends keyof BookingRequestPayload>(field: K, value: BookingRequestPayload[K]) => {
+      setForm((current) => ({ ...current, [field]: value }))
+    },
+    [],
+  )
 
-  function handleNameChange(value: string) {
+  const handleNameChange = useCallback((value: string) => {
     updateField('name', normalizeNameInput(value))
     setFieldErrors((current) => ({ ...current, name: '' }))
-  }
+  }, [updateField])
 
-  function handleEmailChange(value: string) {
+  const handleEmailChange = useCallback((value: string) => {
     updateField('email', normalizeEmailInput(value))
     setFieldErrors((current) => ({ ...current, email: '' }))
-  }
+  }, [updateField])
 
-  function handlePhoneChange(value: string) {
+  const handlePhoneChange = useCallback((value: string) => {
     updateField('phone', formatPhoneInput(value))
     setFieldErrors((current) => ({ ...current, phone: '' }))
-  }
+  }, [updateField])
 
-  function handleSummaryChange(value: string) {
+  const handleSummaryChange = useCallback((value: string) => {
     updateField('subject_summary', sanitizeSummaryInput(value))
     setFieldErrors((current) => ({ ...current, subject_summary: '' }))
-  }
+  }, [updateField])
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!selectedSlotId) {
@@ -116,7 +119,12 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
     } finally {
       setLoadingSubmit(false)
     }
-  }
+  }, [form, onSubmitSuccess, selectedSlotId])
+
+  const clearMessages = useCallback(() => {
+    setSubmitError('')
+    setSuccessMessage('')
+  }, [])
 
   return {
     form,
@@ -132,9 +140,6 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
     handlePhoneChange,
     handleSummaryChange,
     handleSubmit,
-    clearMessages: () => {
-      setSubmitError('')
-      setSuccessMessage('')
-    },
+    clearMessages,
   }
 }

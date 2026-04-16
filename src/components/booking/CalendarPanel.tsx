@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 import type { CalendarMonth } from '../../types/booking'
 
 import BookingHeader from './BookingHeader'
@@ -11,7 +13,7 @@ type CalendarPanelProps = {
   onSelectDate: (date: string) => void
 }
 
-export default function CalendarPanel({
+function CalendarPanelComponent({
   months,
   loading,
   error,
@@ -38,13 +40,17 @@ export default function CalendarPanel({
       {!loading && !error ? (
         <div className="mt-6 space-y-5">
           {months.map((month) => (
-            <div key={`${month.year}-${month.month}`} className="rounded-[1.4rem] border border-white/10 bg-slate-900/65 p-4 sm:p-5">
+            <div
+              key={`${month.year}-${month.month}`}
+              className="rounded-[1.4rem] border border-white/10 bg-slate-900/65 p-4 sm:p-5"
+            >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-400">
                   {month.month_label}
                 </p>
                 <p className="text-sm text-slate-400">
-                  {month.days.length} dia{month.days.length > 1 ? 's' : ''} liberado{month.days.length > 1 ? 's' : ''}
+                  {month.days.length} dia{month.days.length > 1 ? 's' : ''} liberado
+                  {month.days.length > 1 ? 's' : ''}
                 </p>
               </div>
 
@@ -79,3 +85,7 @@ export default function CalendarPanel({
     </section>
   )
 }
+
+const CalendarPanel = memo(CalendarPanelComponent)
+
+export default CalendarPanel
