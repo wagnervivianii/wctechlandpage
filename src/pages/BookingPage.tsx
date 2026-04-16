@@ -26,7 +26,6 @@ export default function BookingPage() {
     submitError,
     successMessage,
     successPayload,
-    hasClientErrors,
     summaryLength,
     handleNameChange,
     handleEmailChange,
@@ -171,7 +170,6 @@ export default function BookingPage() {
               successMessage={successMessage}
               successPayload={successPayload}
               selectedSlotId={selectedSlotId}
-              hasClientErrors={hasClientErrors}
               summaryLength={summaryLength}
               onNameChange={handleNameChange}
               onEmailChange={handleEmailChange}

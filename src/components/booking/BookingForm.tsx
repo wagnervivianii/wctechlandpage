@@ -8,7 +8,6 @@ type BookingFormProps = {
   successMessage: string
   successPayload: BookingRequestResponse | null
   selectedSlotId: string
-  hasClientErrors: boolean
   summaryLength: number
   onNameChange: (value: string) => void
   onEmailChange: (value: string) => void
@@ -26,7 +25,6 @@ export default function BookingForm({
   successMessage,
   successPayload,
   selectedSlotId,
-  hasClientErrors,
   summaryLength,
   onNameChange,
   onEmailChange,
@@ -76,7 +74,9 @@ export default function BookingForm({
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
             placeholder="SEU NOME COMPLETO"
           />
-          <p className="mt-2 text-xs text-slate-400">Aceitamos letras, acentos, espaços e hífen. O nome será salvo em maiúsculas.</p>
+          <p className="mt-2 text-xs text-slate-400">
+            Aceitamos letras, acentos, espaços e hífen. O nome será salvo em maiúsculas.
+          </p>
           {fieldErrors.name ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.name}</p> : null}
         </div>
 
@@ -94,7 +94,9 @@ export default function BookingForm({
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
               placeholder="voce@empresa.com"
             />
-            <p className="mt-2 text-xs text-slate-400">A validação real do e-mail acontecerá na etapa de confirmação por link.</p>
+            <p className="mt-2 text-xs text-slate-400">
+              A validação real do e-mail acontecerá na etapa de confirmação por link.
+            </p>
             {fieldErrors.email ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.email}</p> : null}
           </div>
 
@@ -111,7 +113,9 @@ export default function BookingForm({
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
               placeholder="(11) 99999-9999"
             />
-            <p className="mt-2 text-xs text-slate-400">Informe o número com DDD. A máscara é aplicada automaticamente.</p>
+            <p className="mt-2 text-xs text-slate-400">
+              Informe o número com DDD. A máscara é aplicada automaticamente.
+            </p>
             {fieldErrors.phone ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.phone}</p> : null}
           </div>
         </div>
@@ -131,10 +135,16 @@ export default function BookingForm({
             maxLength={500}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-xs text-slate-400">Descreva o contexto em até 500 caracteres, apenas com texto e pontuação básica.</p>
-            <p className={`text-xs ${summaryLength > 460 ? 'text-cyan-300' : 'text-slate-400'}`}>{summaryLength}/500</p>
+            <p className="text-xs text-slate-400">
+              Descreva o contexto em até 500 caracteres, apenas com texto e pontuação básica.
+            </p>
+            <p className={`text-xs ${summaryLength > 460 ? 'text-cyan-300' : 'text-slate-400'}`}>
+              {summaryLength}/500
+            </p>
           </div>
-          {fieldErrors.subject_summary ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.subject_summary}</p> : null}
+          {fieldErrors.subject_summary ? (
+            <p className="mt-2 text-xs text-rose-300">{fieldErrors.subject_summary}</p>
+          ) : null}
         </div>
 
         <button
