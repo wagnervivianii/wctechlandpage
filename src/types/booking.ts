@@ -1,3 +1,5 @@
+export type BookingViewMode = 'day' | 'week' | 'month'
+
 export type CalendarDay = {
   date: string
   weekday_label: string

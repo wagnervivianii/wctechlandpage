@@ -140,7 +140,7 @@ export default function BookingPage() {
             </h1>
 
             <p className="mt-5 text-pretty text-base leading-8 text-slate-300 sm:text-lg">
-              Exibimos apenas o mês vigente e o próximo mês, com os dias e horários que você liberar na agenda da WV.
+              Confirmado o agendamento, você receberá o link do Meet por e-mail.
             </p>
 
             <BookingHostCard />
