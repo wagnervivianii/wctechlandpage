@@ -26,8 +26,8 @@ export function getBookingFormValidationErrors(form: BookingRequestPayload): Boo
     errors.phone = 'Informe um telefone válido com DDD.'
   }
 
-  if (cleanSummary.length < 20) {
-    errors.subject_summary = 'Descreva o contexto com pelo menos 20 caracteres.'
+  if (cleanSummary.length < 50) {
+    errors.subject_summary = 'Descreva o contexto com pelo menos 50 caracteres.'
   } else if (cleanSummary.length > 500) {
     errors.subject_summary = 'O resumo deve ter no máximo 500 caracteres.'
   } else if (/\d/.test(cleanSummary)) {

@@ -75,7 +75,11 @@ export default function BookingDayView({
               return (
                 <article
                   key={day.date}
-                  className="rounded-[1.25rem] border border-white/10 bg-white/5"
+                  className={`rounded-[1.25rem] border ${
+                    isOpen
+                      ? 'border-emerald-300/35 bg-emerald-500/10'
+                      : 'border-white/10 bg-white/5'
+                  }`}
                 >
                   <button
                     type="button"
@@ -83,11 +87,15 @@ export default function BookingDayView({
                     className="flex w-full items-start justify-between gap-4 rounded-[1.25rem] p-4 text-left transition hover:bg-white/5"
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">
                         {day.weekday_label}
                       </p>
                       <p className="mt-2 text-3xl font-semibold text-white">{day.day_label}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-300">{day.month_label}</p>
+
+                      <span className="mt-4 inline-flex rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/25">
+                        Disponível
+                      </span>
                     </div>
 
                     <div className="flex shrink-0 flex-col items-end gap-3">

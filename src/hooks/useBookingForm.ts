@@ -32,7 +32,7 @@ const initialFieldErrors: BookingFieldErrors = {
 
 type UseBookingFormParams = {
   selectedSlotId: string
-  onSubmitSuccess?: () => void
+  onSubmitSuccess?: () => Promise<void> | void
 }
 
 export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFormParams) {
@@ -105,13 +105,14 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
 
       const data = await bookingApiClient.createBooking(payload)
 
+      await onSubmitSuccess?.()
+
       setSuccessPayload(data)
       setSuccessMessage(
-        'Pré-agendamento enviado. Agora vamos encaminhar a confirmação para o seu e-mail antes da análise final.',
+        'Pré-agendamento enviado. O horário já foi reservado e agora vamos encaminhar a confirmação para o seu e-mail antes da análise final.',
       )
       setForm(initialBookingForm)
       setFieldErrors(initialFieldErrors)
-      onSubmitSuccess?.()
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : 'Não foi possível enviar sua solicitação agora.',

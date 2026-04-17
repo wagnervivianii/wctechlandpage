@@ -26,11 +26,13 @@ export default function BookingPage() {
     slotsError,
     handleDateSelection,
     handleSlotSelection,
+    refreshCalendarAndSlots,
   } = useBookingCalendar()
 
-  const handleBookingSubmitSuccess = useCallback(() => {
+  const handleBookingSubmitSuccess = useCallback(async () => {
     handleSlotSelection('')
-  }, [handleSlotSelection])
+    await refreshCalendarAndSlots()
+  }, [handleSlotSelection, refreshCalendarAndSlots])
 
   const {
     form,
@@ -82,31 +84,61 @@ export default function BookingPage() {
     [handleSubmit],
   )
 
-  const calendarView = useMemo(() => {
-    const commonProps = {
-      months,
-      loading: loadingCalendar,
-      error: calendarError,
-      selectedDate,
-      selectedDayLabel,
-      slots,
-      loadingSlots,
-      slotsError,
-      selectedSlotId,
-      onSelectDate: handleCalendarDateSelection,
-      onSelectSlot: handleTimeSlotSelection,
-    }
+  const shouldShowHeaderBadge = viewMode === 'day' && Boolean(selectedDayLabel)
 
+  const calendarView = useMemo(() => {
     if (viewMode === 'week') {
-      return <BookingWeekView {...commonProps} />
+      return (
+        <BookingWeekView
+          months={months}
+          loading={loadingCalendar}
+          error={calendarError}
+          selectedDate={selectedDate}
+          selectedDayLabel={selectedDayLabel}
+          slots={slots}
+          loadingSlots={loadingSlots}
+          slotsError={slotsError}
+          selectedSlotId={selectedSlotId}
+          onSelectDate={handleCalendarDateSelection}
+          onSelectSlot={handleTimeSlotSelection}
+        />
+      )
     }
 
     if (viewMode === 'month') {
-      return <BookingMonthView {...commonProps} />
+      return (
+        <BookingMonthView
+          months={months}
+          loading={loadingCalendar}
+          error={calendarError}
+          selectedDate={selectedDate}
+          selectedDayLabel={selectedDayLabel}
+          slots={slots}
+          loadingSlots={loadingSlots}
+          slotsError={slotsError}
+          selectedSlotId={selectedSlotId}
+          onSelectDate={handleCalendarDateSelection}
+          onSelectSlot={handleTimeSlotSelection}
+        />
+      )
     }
 
-    return <BookingDayView {...commonProps} />
+    return (
+      <BookingDayView
+        months={months}
+        loading={loadingCalendar}
+        error={calendarError}
+        selectedDate={selectedDate}
+        slots={slots}
+        loadingSlots={loadingSlots}
+        slotsError={slotsError}
+        selectedSlotId={selectedSlotId}
+        onSelectDate={handleCalendarDateSelection}
+        onSelectSlot={handleTimeSlotSelection}
+      />
+    )
   }, [
+    viewMode,
     months,
     loadingCalendar,
     calendarError,
@@ -118,7 +150,6 @@ export default function BookingPage() {
     selectedSlotId,
     handleCalendarDateSelection,
     handleTimeSlotSelection,
-    viewMode,
   ])
 
   return (
@@ -178,10 +209,14 @@ export default function BookingPage() {
             <BookingHostCard />
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="mt-10 grid gap-6 xl:grid-cols-[1.02fr_0.98fr] xl:items-start">
             <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)] backdrop-blur sm:p-6">
-              <BookingHeader selectedDayLabel={selectedDayLabel} />
-              <BookingViewModeSwitcher value={viewMode} onChange={setViewMode} />
+              <BookingHeader selectedDayLabel={shouldShowHeaderBadge ? selectedDayLabel : undefined} />
+
+              <div className="mt-5 border-t border-white/10 pt-5">
+                <BookingViewModeSwitcher value={viewMode} onChange={setViewMode} />
+              </div>
+
               {calendarView}
             </section>
 

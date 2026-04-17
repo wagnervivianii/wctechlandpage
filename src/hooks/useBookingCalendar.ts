@@ -17,10 +17,74 @@ export function useBookingCalendar() {
   const [calendarError, setCalendarError] = useState('')
   const [slotsError, setSlotsError] = useState('')
 
+  const loadCalendar = useCallback(async () => {
+    setLoadingCalendar(true)
+    setCalendarError('')
+
+    try {
+      const data = await bookingApiClient.fetchCalendar()
+      const nextMonths = data.months
+      const availableDays = flattenCalendarDays(nextMonths)
+
+      setMonths(nextMonths)
+
+      setSelectedDate((current) => {
+        if (!availableDays.length) {
+          return ''
+        }
+
+        if (current && availableDays.some((day) => day.date === current)) {
+          return current
+        }
+
+        return availableDays[0]?.date ?? ''
+      })
+    } catch (error) {
+      setCalendarError(
+        error instanceof Error ? error.message : 'Não foi possível carregar a agenda agora.',
+      )
+    } finally {
+      setLoadingCalendar(false)
+    }
+  }, [])
+
+  const loadSlotsByDate = useCallback(async (date: string) => {
+    if (!date) {
+      setSlots([])
+      setSelectedSlotId('')
+      return
+    }
+
+    setLoadingSlots(true)
+    setSlotsError('')
+
+    try {
+      const data = await bookingApiClient.fetchSlotsByDate(date)
+      setSlots(data.slots)
+      setSelectedSlotId((current) => {
+        if (current && data.slots.some((slot) => String(slot.id) === current)) {
+          return current
+        }
+
+        return data.slots[0] ? String(data.slots[0].id) : ''
+      })
+    } catch (error) {
+      setSlotsError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível carregar os horários deste dia.',
+      )
+      setSlots([])
+      setSelectedSlotId('')
+    } finally {
+      setLoadingSlots(false)
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
 
-    async function loadCalendar() {
+    async function run() {
       try {
         setLoadingCalendar(true)
         setCalendarError('')
@@ -28,12 +92,21 @@ export function useBookingCalendar() {
         const data = await bookingApiClient.fetchCalendar()
         if (cancelled) return
 
-        setMonths(data.months)
+        const nextMonths = data.months
+        const availableDays = flattenCalendarDays(nextMonths)
 
-        const firstDay = flattenCalendarDays(data.months)[0]
-        if (firstDay) {
-          setSelectedDate((current) => current || firstDay.date)
-        }
+        setMonths(nextMonths)
+        setSelectedDate((current) => {
+          if (!availableDays.length) {
+            return ''
+          }
+
+          if (current && availableDays.some((day) => day.date === current)) {
+            return current
+          }
+
+          return availableDays[0]?.date ?? ''
+        })
       } catch (error) {
         if (cancelled) return
         setCalendarError(
@@ -46,7 +119,7 @@ export function useBookingCalendar() {
       }
     }
 
-    void loadCalendar()
+    void run()
 
     return () => {
       cancelled = true
@@ -56,7 +129,7 @@ export function useBookingCalendar() {
   useEffect(() => {
     let cancelled = false
 
-    async function loadSlots() {
+    async function run() {
       if (!selectedDate) {
         setSlots([])
         setSelectedSlotId('')
@@ -71,8 +144,13 @@ export function useBookingCalendar() {
         if (cancelled) return
 
         setSlots(data.slots)
-        const firstSlot = data.slots[0]
-        setSelectedSlotId(firstSlot ? String(firstSlot.id) : '')
+        setSelectedSlotId((current) => {
+          if (current && data.slots.some((slot) => String(slot.id) === current)) {
+            return current
+          }
+
+          return data.slots[0] ? String(data.slots[0].id) : ''
+        })
       } catch (error) {
         if (cancelled) return
         setSlotsError(
@@ -80,6 +158,8 @@ export function useBookingCalendar() {
             ? error.message
             : 'Não foi possível carregar os horários deste dia.',
         )
+        setSlots([])
+        setSelectedSlotId('')
       } finally {
         if (!cancelled) {
           setLoadingSlots(false)
@@ -87,12 +167,38 @@ export function useBookingCalendar() {
       }
     }
 
-    void loadSlots()
+    void run()
 
     return () => {
       cancelled = true
     }
   }, [selectedDate])
+
+  const refreshCalendarAndSlots = useCallback(async () => {
+    setCalendarError('')
+    setSlotsError('')
+
+    const data = await bookingApiClient.fetchCalendar()
+    const nextMonths = data.months
+    const availableDays = flattenCalendarDays(nextMonths)
+
+    setMonths(nextMonths)
+
+    const nextSelectedDate =
+      selectedDate && availableDays.some((day) => day.date === selectedDate)
+        ? selectedDate
+        : availableDays[0]?.date ?? ''
+
+    setSelectedDate(nextSelectedDate)
+
+    if (!nextSelectedDate) {
+      setSlots([])
+      setSelectedSlotId('')
+      return
+    }
+
+    await loadSlotsByDate(nextSelectedDate)
+  }, [loadSlotsByDate, selectedDate])
 
   const allDays = useMemo(() => flattenCalendarDays(months), [months])
   const selectedDay: CalendarDay | null = allDays.find((day) => day.date === selectedDate) ?? null
@@ -118,5 +224,8 @@ export function useBookingCalendar() {
     slotsError,
     handleDateSelection,
     handleSlotSelection,
+    refreshCalendarAndSlots,
+    reloadCalendar: loadCalendar,
+    reloadSlotsByDate: loadSlotsByDate,
   }
 }

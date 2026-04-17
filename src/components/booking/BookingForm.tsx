@@ -131,12 +131,12 @@ export default function BookingForm({
             required
             rows={6}
             className="w-full rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
-            placeholder="Explique brevemente o contexto, a dor atual e o que você gostaria de resolver."
+            placeholder="Explique com mais contexto o cenário atual, o problema, o impacto no negócio e o que você espera resolver com a reunião."
             maxLength={500}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-xs text-slate-400">
-              Descreva o contexto em até 500 caracteres, apenas com texto e pontuação básica.
+              Descreva o contexto em pelo menos 50 e no máximo 500 caracteres, apenas com texto e pontuação básica.
             </p>
             <p className={`text-xs ${summaryLength > 460 ? 'text-cyan-300' : 'text-slate-400'}`}>
               {summaryLength}/500

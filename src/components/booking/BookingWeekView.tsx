@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 
 import type { AvailabilitySlot, CalendarMonth } from '../../types/booking'
-import { buildBookingWeekGroups, getBookingWeekDayHeaders } from '../../utils/bookingCalendarView'
+import { buildBookingWeekGroups, getBookingCalendarHeaders } from '../../utils/bookingCalendarView'
 
-import TimeSlotPicker from './TimeSlotPicker'
+import BookingSelectedDayPanel from './BookingSelectedDayPanel'
 
 type BookingWeekViewProps = {
   months: CalendarMonth[]
@@ -33,7 +33,7 @@ export default function BookingWeekView({
   onSelectSlot,
 }: BookingWeekViewProps) {
   const weeks = useMemo(() => buildBookingWeekGroups(months), [months])
-  const headers = getBookingWeekDayHeaders()
+  const headers = getBookingCalendarHeaders()
 
   if (loading) {
     return (
@@ -51,6 +51,23 @@ export default function BookingWeekView({
     )
   }
 
+  if (selectedDate) {
+    return (
+      <div className="mt-6">
+        <BookingSelectedDayPanel
+          selectedDayLabel={selectedDayLabel}
+          selectedDate={selectedDate}
+          slots={slots}
+          loadingSlots={loadingSlots}
+          slotsError={slotsError}
+          selectedSlotId={selectedSlotId}
+          onSelectSlot={onSelectSlot}
+          onChangeDay={() => onSelectDate('')}
+        />
+      </div>
+    )
+  }
+
   if (weeks.length === 0) {
     return (
       <div className="mt-6 rounded-[1.4rem] border border-white/10 bg-slate-900/65 p-5 text-sm text-slate-300">
@@ -62,82 +79,60 @@ export default function BookingWeekView({
   return (
     <div className="mt-6 space-y-5">
       {weeks.map((week) => (
-        <article
+        <section
           key={week.weekKey}
-          className="rounded-[1.5rem] border border-white/10 bg-slate-900/65 p-4"
+          className="rounded-[1.4rem] border border-white/10 bg-slate-900/65 p-3 sm:p-4 lg:p-5"
         >
           <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Semana</p>
-            <h3 className="mt-2 text-lg font-semibold text-white">{week.weekLabel}</h3>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">
+              Semana
+            </p>
+            <h3 className="mt-2 text-base font-semibold text-white sm:text-lg">
+              {week.weekLabel}
+            </h3>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[720px]">
-              <div className="grid grid-cols-7 gap-3">
-                {headers.map((header) => (
-                  <div
-                    key={`${week.weekKey}-${header}`}
-                    className="rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
-                  >
-                    {header}
-                  </div>
-                ))}
-
-                {week.cells.map((cell) => {
-                  const isSelected = cell.date === selectedDate
-
-                  return (
-                    <button
-                      key={cell.cellKey}
-                      type="button"
-                      disabled={!cell.hasAvailability}
-                      onClick={() => onSelectDate(isSelected ? '' : String(cell.date))}
-                      className={`min-h-[160px] rounded-[1.2rem] border p-3 text-left transition ${
-                        cell.hasAvailability
-                          ? isSelected
-                            ? 'border-cyan-300 bg-cyan-400/12 shadow-[0_0_0_1px_rgba(34,211,238,0.22)]'
-                            : 'border-cyan-300/20 bg-cyan-400/8 hover:border-cyan-300/40 hover:bg-cyan-400/12'
-                          : 'border-white/10 bg-slate-950/40 opacity-45'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-white">{cell.dayNumber}</span>
-                        {cell.hasAvailability ? (
-                          <span className="rounded-full bg-cyan-400/12 px-2 py-1 text-[0.65rem] font-semibold text-cyan-200 ring-1 ring-cyan-300/25">
-                            livre
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
-                        {cell.weekdayLabel}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-400">{cell.monthLabel}</p>
-                    </button>
-                  )
-                })}
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 lg:gap-3">
+            {headers.map((header) => (
+              <div
+                key={`${week.weekKey}-${header}`}
+                className="rounded-xl border border-white/10 bg-slate-950/50 px-1.5 py-2 text-center text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-slate-400 sm:px-2 sm:text-[0.7rem]"
+              >
+                {header}
               </div>
-            </div>
+            ))}
+
+            {week.cells.map((cell) => (
+              <button
+                key={cell.cellKey}
+                type="button"
+                disabled={!cell.hasAvailability}
+                onClick={() => onSelectDate(cell.date)}
+                className={`aspect-[0.88] rounded-[1rem] border p-2 text-left transition sm:aspect-square sm:p-3 ${
+                  cell.hasAvailability
+                    ? 'border-emerald-300/35 bg-emerald-500/12 hover:border-emerald-300/55 hover:bg-emerald-500/18'
+                    : 'border-white/10 bg-slate-950/40'
+                } ${cell.inCurrentRange ? '' : 'opacity-35'} disabled:cursor-default`}
+              >
+                <div className="flex h-full flex-col justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white sm:text-lg">{cell.dayNumber}</p>
+                    <p className="mt-1 hidden text-xs text-slate-400 sm:block">
+                      {cell.monthLabel}
+                    </p>
+                  </div>
+
+                  {cell.hasAvailability ? (
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.85)]" />
+                  ) : (
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-white/10" />
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
-        </article>
+        </section>
       ))}
-
-      {selectedDate ? (
-        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Dia selecionado</p>
-          <p className="mt-3 text-sm text-slate-200">
-            {selectedDayLabel || selectedDate}
-          </p>
-
-          <TimeSlotPicker
-            slots={slots}
-            loading={loadingSlots}
-            error={slotsError}
-            selectedSlotId={selectedSlotId}
-            onSelectSlot={onSelectSlot}
-          />
-        </div>
-      ) : null}
     </div>
   )
 }
