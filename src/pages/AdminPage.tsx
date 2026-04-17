@@ -1,8 +1,9 @@
 import AdminAvailabilityManager from '../components/admin/AdminAvailabilityManager'
-import AdminHistoryEventDetail from '../components/admin/AdminHistoryEventDetail'
 import AdminLoginCard from '../components/admin/AdminLoginCard'
+import AdminHistoryEventDetail from '../components/admin/AdminHistoryEventDetail'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useAdminAvailability } from '../hooks/useAdminAvailability'
+import { useAdminBookingReview } from '../hooks/useAdminBookingReview'
 
 type AdminPageProps = {
   historyEventId?: number | null
@@ -27,6 +28,7 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     submitting,
     availabilityError,
     successMessage,
+    loadDays,
     upsertDay,
     toggleDay,
     createSlot,
@@ -36,6 +38,21 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     token,
     enabled: isAuthenticated,
     onUnauthorized: logout,
+  })
+
+  const {
+    pendingReviewItems,
+    loadingPendingReview,
+    submittingReviewId,
+    reviewError,
+    reviewSuccessMessage,
+    approveBooking,
+    rejectBooking,
+  } = useAdminBookingReview({
+    token,
+    enabled: isAuthenticated,
+    onUnauthorized: logout,
+    onDecisionApplied: loadDays,
   })
 
   return (
@@ -75,40 +92,49 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 lg:pb-24 lg:pt-14">
-          <div className="mx-auto max-w-4xl">
-            {authLoading ? (
-              <div className="rounded-[1.8rem] border border-white/10 bg-slate-900/80 p-5 text-sm text-slate-300 shadow-[0_18px_60px_rgba(2,6,23,0.38)] backdrop-blur sm:p-6">
-                Validando sessão administrativa...
-              </div>
-            ) : null}
+        <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pb-24 lg:pt-12">
+          {authLoading ? (
+            <div className="mx-auto max-w-xl rounded-[1.8rem] border border-white/10 bg-slate-900/80 p-5 text-sm text-slate-300 shadow-[0_18px_60px_rgba(2,6,23,0.38)] backdrop-blur sm:p-6">
+              Validando sessão administrativa...
+            </div>
+          ) : null}
 
-            {!authLoading && !isAuthenticated ? (
+          {!authLoading && !isAuthenticated ? (
+            <div className="mx-auto max-w-xl">
               <AdminLoginCard loading={loginLoading} error={authError} onSubmit={login} />
-            ) : null}
+            </div>
+          ) : null}
 
-            {!authLoading && isAuthenticated && currentUser && historyEventId !== null ? (
+          {!authLoading && isAuthenticated && currentUser && historyEventId !== null ? (
+            <div className="mx-auto max-w-6xl">
               <AdminHistoryEventDetail history={history} eventId={historyEventId} />
-            ) : null}
+            </div>
+          ) : null}
 
-            {!authLoading && isAuthenticated && currentUser && historyEventId === null ? (
-              <AdminAvailabilityManager
-                username={currentUser.username}
-                days={days}
-                history={history}
-                loadingDays={loadingDays}
-                submitting={submitting}
-                error={availabilityError}
-                successMessage={successMessage}
-                onLogout={logout}
-                onCreateDay={upsertDay}
-                onToggleDay={toggleDay}
-                onCreateSlot={createSlot}
-                onUpdateSlot={updateSlot}
-                onDeleteSlot={deleteSlot}
-              />
-            ) : null}
-          </div>
+          {!authLoading && isAuthenticated && currentUser && historyEventId === null ? (
+            <AdminAvailabilityManager
+              username={currentUser.username}
+              days={days}
+              history={history}
+              pendingReviewItems={pendingReviewItems}
+              loadingDays={loadingDays}
+              loadingPendingReview={loadingPendingReview}
+              submitting={submitting}
+              submittingReviewId={submittingReviewId}
+              error={availabilityError}
+              successMessage={successMessage}
+              reviewError={reviewError}
+              reviewSuccessMessage={reviewSuccessMessage}
+              onLogout={logout}
+              onCreateDay={upsertDay}
+              onToggleDay={toggleDay}
+              onCreateSlot={createSlot}
+              onUpdateSlot={updateSlot}
+              onDeleteSlot={deleteSlot}
+              onApproveBooking={approveBooking}
+              onRejectBooking={rejectBooking}
+            />
+          ) : null}
         </main>
       </div>
     </div>

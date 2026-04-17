@@ -37,7 +37,7 @@ export function useBookingCalendar() {
           return current
         }
 
-        return availableDays[0]?.date ?? ''
+        return ''
       })
     } catch (error) {
       setCalendarError(
@@ -66,7 +66,7 @@ export function useBookingCalendar() {
           return current
         }
 
-        return data.slots[0] ? String(data.slots[0].id) : ''
+        return ''
       })
     } catch (error) {
       setSlotsError(
@@ -105,7 +105,7 @@ export function useBookingCalendar() {
             return current
           }
 
-          return availableDays[0]?.date ?? ''
+          return ''
         })
       } catch (error) {
         if (cancelled) return
@@ -149,7 +149,7 @@ export function useBookingCalendar() {
             return current
           }
 
-          return data.slots[0] ? String(data.slots[0].id) : ''
+          return ''
         })
       } catch (error) {
         if (cancelled) return
@@ -185,9 +185,7 @@ export function useBookingCalendar() {
     setMonths(nextMonths)
 
     const nextSelectedDate =
-      selectedDate && availableDays.some((day) => day.date === selectedDate)
-        ? selectedDate
-        : availableDays[0]?.date ?? ''
+      selectedDate && availableDays.some((day) => day.date === selectedDate) ? selectedDate : ''
 
     setSelectedDate(nextSelectedDate)
 
@@ -202,6 +200,8 @@ export function useBookingCalendar() {
 
   const allDays = useMemo(() => flattenCalendarDays(months), [months])
   const selectedDay: CalendarDay | null = allDays.find((day) => day.date === selectedDate) ?? null
+  const selectedSlot: AvailabilitySlot | null =
+    slots.find((slot) => String(slot.id) === selectedSlotId) ?? null
 
   const handleDateSelection = useCallback((date: string) => {
     setSelectedDate(date)
@@ -212,11 +212,19 @@ export function useBookingCalendar() {
     setSelectedSlotId(slotId)
   }, [])
 
+  const resetSelection = useCallback(() => {
+    setSelectedDate('')
+    setSelectedSlotId('')
+    setSlots([])
+    setSlotsError('')
+  }, [])
+
   return {
     months,
     slots,
     selectedDate,
     selectedDay,
+    selectedSlot,
     selectedSlotId,
     loadingCalendar,
     loadingSlots,
@@ -227,5 +235,6 @@ export function useBookingCalendar() {
     refreshCalendarAndSlots,
     reloadCalendar: loadCalendar,
     reloadSlotsByDate: loadSlotsByDate,
+    resetSelection,
   }
 }

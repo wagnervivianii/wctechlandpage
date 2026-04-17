@@ -1,6 +1,10 @@
 import type {
   AdminAvailabilityDayItem,
   AdminAvailabilityListResponse,
+  AdminBookingApprovalPayload,
+  AdminBookingDecisionResponse,
+  AdminBookingPendingReviewListResponse,
+  AdminBookingRejectionPayload,
   AdminDayTogglePayload,
   AdminDayUpsertPayload,
   AdminLoginPayload,
@@ -160,6 +164,43 @@ export class AdminApiClient {
     return parseResponse<AdminAvailabilityDayItem>(
       response,
       'Não foi possível remover o horário.',
+    )
+  }
+
+  async fetchPendingReviewBookings(token: string) {
+    const response = await fetch('/api/admin/bookings/pending-review', {
+      headers: buildAuthHeaders(token),
+    })
+
+    return parseResponse<AdminBookingPendingReviewListResponse>(
+      response,
+      'Não foi possível carregar as solicitações pendentes de revisão.',
+    )
+  }
+
+  async approveBooking(token: string, bookingId: number, payload: AdminBookingApprovalPayload) {
+    const response = await fetch(`/api/admin/bookings/${bookingId}/approve`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminBookingDecisionResponse>(
+      response,
+      'Não foi possível aprovar a solicitação.',
+    )
+  }
+
+  async rejectBooking(token: string, bookingId: number, payload: AdminBookingRejectionPayload) {
+    const response = await fetch(`/api/admin/bookings/${bookingId}/reject`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminBookingDecisionResponse>(
+      response,
+      'Não foi possível rejeitar a solicitação.',
     )
   }
 }

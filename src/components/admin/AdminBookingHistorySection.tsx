@@ -214,10 +214,6 @@ export default function AdminBookingHistorySection({ history }: AdminBookingHist
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Histórico</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Reuniões que já passaram pela agenda</h2>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            O histórico agora nasce recolhido e pode ser visto por Dia, Semana ou Mês. Nos modos Semana e Mês, os
-            dias com evento ficam destacados, e cada evento leva para uma página dedicada.
-          </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">

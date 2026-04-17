@@ -1,8 +1,14 @@
 import { useMemo, useState } from 'react'
 
-import type { AdminAvailabilityDayItem, AdminBookingHistoryItem } from '../../types/admin'
-import AdminAvailabilityDayCard from './AdminAvailabilityDayCard'
+import type {
+  AdminBookingApprovalPayload,
+  AdminBookingHistoryItem,
+  AdminBookingPendingReviewItem,
+  AdminBookingRejectionPayload,
+} from '../../types/admin'
+import AdminActiveScheduleSection from './AdminActiveScheduleSection'
 import AdminBookingHistorySection from './AdminBookingHistorySection'
+import AdminPendingReviewSection from './AdminPendingReviewSection'
 
 type SlotDraft = {
   start_time: string
@@ -11,20 +17,53 @@ type SlotDraft = {
   is_active: boolean
 }
 
+type AdminAvailabilityDayItem = {
+  id: number
+  date: string
+  weekday_label: string
+  day_label: string
+  month_label: string
+  display_label: string
+  is_active: boolean
+  has_active_slots: boolean
+  notes: string | null
+  slots: {
+    id: number
+    start_time: string
+    end_time: string
+    timezone_name: string
+    is_active: boolean
+    label: string
+  }[]
+}
+
 type AdminAvailabilityManagerProps = {
   username: string
   days: AdminAvailabilityDayItem[]
   history: AdminBookingHistoryItem[]
+  pendingReviewItems: AdminBookingPendingReviewItem[]
   loadingDays: boolean
+  loadingPendingReview: boolean
   submitting: boolean
+  submittingReviewId: number | null
   error: string
   successMessage: string
+  reviewError: string
+  reviewSuccessMessage: string
   onLogout: () => void
   onCreateDay: (date: string, isActive: boolean) => Promise<void>
   onToggleDay: (dayId: number, isActive: boolean) => Promise<void>
   onCreateSlot: (dayId: number, payload: SlotDraft) => Promise<void>
   onUpdateSlot: (slotId: number, payload: SlotDraft) => Promise<void>
   onDeleteSlot: (slotId: number) => Promise<void>
+  onApproveBooking: (bookingId: number, payload: AdminBookingApprovalPayload) => Promise<unknown>
+  onRejectBooking: (bookingId: number, payload: AdminBookingRejectionPayload) => Promise<unknown>
+}
+
+type AdminMetricCard = {
+  label: string
+  value: string
+  accent: string
 }
 
 function getWindowLimits() {
@@ -56,27 +95,70 @@ export default function AdminAvailabilityManager({
   username,
   days,
   history,
+  pendingReviewItems,
   loadingDays,
+  loadingPendingReview,
   submitting,
+  submittingReviewId,
   error,
   successMessage,
+  reviewError,
+  reviewSuccessMessage,
   onLogout,
   onCreateDay,
   onToggleDay,
   onCreateSlot,
   onUpdateSlot,
   onDeleteSlot,
+  onApproveBooking,
+  onRejectBooking,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
-  const [openDayId, setOpenDayId] = useState<number | null>(null)
   const [slotDrafts, setSlotDrafts] = useState<Record<number, SlotDraft>>({})
   const [editingSlotIds, setEditingSlotIds] = useState<Record<number, boolean>>({})
   const [editingSlotDrafts, setEditingSlotDrafts] = useState<Record<number, SlotDraft>>({})
 
-  function getDraftForDay(dayId: number) {
-    return slotDrafts[dayId] ?? defaultSlotDraft
-  }
+  const activeSlotCount = useMemo(
+    () => days.reduce((total, day) => total + day.slots.filter((slot) => slot.is_active).length, 0),
+    [days],
+  )
+  const completedCount = useMemo(
+    () => history.filter((item) => item.meeting_status === 'completed').length,
+    [history],
+  )
+  const transcriptCount = useMemo(() => history.filter((item) => item.has_transcript).length, [history])
+
+  const metrics = useMemo<AdminMetricCard[]>(
+    () => [
+      {
+        label: 'Pendentes',
+        value: String(pendingReviewItems.length),
+        accent: 'border-amber-300/20 bg-amber-500/10 text-amber-100',
+      },
+      {
+        label: 'Dias ativos',
+        value: String(days.length),
+        accent: 'border-cyan-300/20 bg-cyan-500/10 text-cyan-100',
+      },
+      {
+        label: 'Horários ativos',
+        value: String(activeSlotCount),
+        accent: 'border-indigo-300/20 bg-indigo-500/10 text-indigo-100',
+      },
+      {
+        label: 'Com transcrição',
+        value: String(transcriptCount),
+        accent: 'border-emerald-300/20 bg-emerald-500/10 text-emerald-100',
+      },
+      {
+        label: 'Concluídas',
+        value: String(completedCount),
+        accent: 'border-fuchsia-300/20 bg-fuchsia-500/10 text-fuchsia-100',
+      },
+    ],
+    [activeSlotCount, completedCount, days.length, pendingReviewItems.length, transcriptCount],
+  )
 
   function updateDraftForDay(dayId: number, nextDraft: SlotDraft) {
     setSlotDrafts((current) => ({ ...current, [dayId]: nextDraft }))
@@ -104,32 +186,24 @@ export default function AdminAvailabilityManager({
     setEditingSlotDrafts((current) => ({ ...current, [slotId]: nextDraft }))
   }
 
-  function toggleOpen(dayId: number) {
-    setOpenDayId((current) => (current === dayId ? null : dayId))
-  }
-
   const createDayHandler: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
     await onCreateDay(dayDate, true)
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[1.8rem] border border-white/10 bg-slate-900/80 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.38)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
+    <div className="space-y-6 lg:space-y-7">
+      <section className="rounded-[1.8rem] border border-white/10 bg-slate-900/80 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.38)] backdrop-blur sm:p-6 lg:p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Painel administrativo</p>
-            <h1 className="mt-3 text-3xl font-semibold text-white">Gerenciar agenda liberada</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-              A agenda ativa mostra apenas o que ainda pode acontecer. O histórico guarda apenas reuniões que
-              realmente passaram pelo fluxo e já prepara a base para Meet, observações e transcrição.
-            </p>
+            <h1 className="mt-3 text-3xl font-semibold text-white lg:text-[2.15rem]">Gerenciar agenda liberada</h1>
             <p className="mt-3 text-sm text-slate-400">
               Sessão ativa como <span className="font-semibold text-slate-200">{username}</span>
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 xl:justify-end">
             <a
               href="/agendar"
               className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
@@ -158,12 +232,21 @@ export default function AdminAvailabilityManager({
           </div>
         ) : null}
 
-        <form onSubmit={createDayHandler} className="mt-6 rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-          <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-            <div>
-              <label htmlFor="admin-day-date" className="mb-2 block text-sm font-medium text-slate-200">
-                Liberar ou atualizar dia
-              </label>
+        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] xl:items-start">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            {metrics.map((metric) => (
+              <article key={metric.label} className={`rounded-[1.3rem] border p-4 ${metric.accent}`}>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{metric.label}</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{metric.value}</p>
+              </article>
+            ))}
+          </div>
+
+          <form onSubmit={createDayHandler} className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 lg:p-5">
+            <label htmlFor="admin-day-date" className="mb-2 block text-sm font-medium text-slate-200">
+              Liberar ou atualizar dia
+            </label>
+            <div className="grid gap-4 md:grid-cols-[1fr_auto]">
               <input
                 id="admin-day-date"
                 type="date"
@@ -174,13 +257,7 @@ export default function AdminAvailabilityManager({
                 required
                 className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
               />
-              <p className="mt-2 text-xs text-slate-400">
-                Dias e horários passados saem automaticamente da agenda ativa. O histórico guarda somente o que teve
-                solicitação real.
-              </p>
-            </div>
 
-            <div className="flex items-end">
               <button
                 type="submit"
                 disabled={submitting || !dayDate}
@@ -189,56 +266,45 @@ export default function AdminAvailabilityManager({
                 {submitting ? 'Salvando...' : 'Salvar dia'}
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Agenda ativa</p>
-          <h2 className="mt-2 text-xl font-semibold text-white">Dias e horários ainda válidos</h2>
-          <p className="mt-2 text-sm leading-7 text-slate-300">
-            Aqui ficam apenas os dias futuros e os horários que ainda não passaram.
-          </p>
+      <AdminActiveScheduleSection
+        days={days}
+        loadingDays={loadingDays}
+        submitting={submitting}
+        dayDrafts={slotDrafts}
+        editingSlotIds={editingSlotIds}
+        editingSlotDrafts={editingSlotDrafts}
+        onToggleDay={onToggleDay}
+        onUpdateDraftForDay={updateDraftForDay}
+        onStartEditingSlot={startEditingSlot}
+        onStopEditingSlot={stopEditingSlot}
+        onSetEditingSlotDraft={setEditingSlotDraft}
+        onCreateSlot={onCreateSlot}
+        onUpdateSlot={onUpdateSlot}
+        onDeleteSlot={onDeleteSlot}
+        onResetDayDraft={resetDayDraft}
+      />
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:items-start">
+        <div className="min-w-0">
+          <AdminPendingReviewSection
+            items={pendingReviewItems}
+            loading={loadingPendingReview}
+            submittingReviewId={submittingReviewId}
+            error={reviewError}
+            successMessage={reviewSuccessMessage}
+            onApprove={onApproveBooking}
+            onReject={onRejectBooking}
+          />
         </div>
 
-        {loadingDays ? (
-          <div className="rounded-[1.6rem] border border-white/10 bg-slate-900/75 p-5 text-sm text-slate-300">
-            Carregando disponibilidade administrativa...
-          </div>
-        ) : null}
-
-        {!loadingDays && days.length === 0 ? (
-          <div className="rounded-[1.6rem] border border-white/10 bg-slate-900/75 p-5 text-sm text-slate-300">
-            Nenhum dia ativo disponível no momento. Você pode criar um novo dia acima.
-          </div>
-        ) : null}
-
-        {!loadingDays &&
-          days.map((day) => (
-            <AdminAvailabilityDayCard
-              key={day.id}
-              day={day}
-              isOpen={openDayId === day.id}
-              submitting={submitting}
-              dayDraft={getDraftForDay(day.id)}
-              editingSlotIds={editingSlotIds}
-              editingSlotDrafts={editingSlotDrafts}
-              onToggleOpen={toggleOpen}
-              onToggleDay={onToggleDay}
-              onUpdateDraftForDay={updateDraftForDay}
-              onStartEditingSlot={startEditingSlot}
-              onStopEditingSlot={stopEditingSlot}
-              onSetEditingSlotDraft={setEditingSlotDraft}
-              onCreateSlot={onCreateSlot}
-              onUpdateSlot={onUpdateSlot}
-              onDeleteSlot={onDeleteSlot}
-              onResetDayDraft={resetDayDraft}
-            />
-          ))}
+        <div className="min-w-0">
+          <AdminBookingHistorySection history={history} />
+        </div>
       </section>
-
-      <AdminBookingHistorySection history={history} />
     </div>
   )
 }

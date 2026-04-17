@@ -55,6 +55,12 @@ export type AdminBookingHistoryItem = {
   transcript_summary: string | null
   has_transcript: boolean
   created_at: string
+  contact_confirmed_at: string | null
+  admin_reviewed_at: string | null
+  rejection_reason: string | null
+  can_schedule_again: boolean
+  has_client_workspace: boolean
+  client_workspace_status: string | null
 }
 
 export type AdminAvailabilityListResponse = {
@@ -76,4 +82,102 @@ export type AdminSlotUpsertPayload = {
   end_time: string
   timezone_name: string
   is_active: boolean
+}
+
+export type AdminClientWorkspaceMeetingItem = {
+  id: number
+  booking_request_id: number
+  meeting_label: string
+  meet_url: string | null
+  recording_url: string | null
+  recording_provider: string | null
+  has_transcript: boolean
+  transcript_summary: string | null
+  meeting_notes: string | null
+  is_visible_to_client: boolean
+  synced_from_booking_at: string | null
+}
+
+export type AdminClientWorkspaceInviteItem = {
+  id: number
+  invite_email: string
+  invite_status: string
+  expires_at: string | null
+  sent_at: string | null
+  accepted_at: string | null
+  created_at: string
+}
+
+export type AdminClientWorkspaceDetailResponse = {
+  workspace_id: number
+  workspace_status: string
+  source_booking_request_id: number | null
+  source_booking_status: string
+  source_meeting_status: string
+  primary_contact_name: string
+  primary_contact_email: string
+  primary_contact_phone: string
+  portal_notes: string | null
+  activated_at: string | null
+  created_at: string
+  meetings: AdminClientWorkspaceMeetingItem[]
+  invites: AdminClientWorkspaceInviteItem[]
+  setup_token: string | null
+  setup_path: string | null
+}
+
+export type AdminBookingPendingReviewItem = {
+  id: number
+  booking_date: string | null
+  start_time: string | null
+  end_time: string | null
+  display_label: string
+  status: string
+  meeting_status: string
+  name: string
+  email: string
+  phone: string
+  subject_summary: string
+  created_at: string
+  contact_confirmed_at: string
+}
+
+export type AdminBookingPendingReviewListResponse = {
+  items: AdminBookingPendingReviewItem[]
+}
+
+export type AdminBookingApprovalPayload = {
+  meet_url: string | null
+  meet_event_id: string | null
+  meeting_notes: string | null
+  create_client_workspace: boolean
+  create_workspace_invite: boolean
+  invite_ttl_hours: number
+  portal_notes: string | null
+}
+
+export type AdminBookingRejectionPayload = {
+  rejection_reason: string
+  meeting_notes: string | null
+}
+
+export type AdminBookingDecisionResponse = {
+  id: number
+  status: string
+  meeting_status: string
+  name: string
+  email: string
+  phone: string
+  subject_summary: string
+  booking_date: string | null
+  start_time: string | null
+  end_time: string | null
+  meet_url: string | null
+  meet_event_id: string | null
+  meeting_notes: string | null
+  contact_confirmed_at: string | null
+  admin_reviewed_at: string | null
+  rejection_reason: string | null
+  can_schedule_again: boolean
+  client_workspace: AdminClientWorkspaceDetailResponse | null
 }

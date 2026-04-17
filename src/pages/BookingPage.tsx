@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import BookingDayView from '../components/booking/BookingDayView'
 import BookingForm from '../components/booking/BookingForm'
@@ -11,14 +11,27 @@ import { useBookingCalendar } from '../hooks/useBookingCalendar'
 import { useBookingForm } from '../hooks/useBookingForm'
 import type { BookingViewMode } from '../types/booking'
 
+const MOBILE_VIEW_MODE: BookingViewMode = 'week'
+const DESKTOP_VIEW_MODE: BookingViewMode = 'month'
+const DESKTOP_MEDIA_QUERY = '(min-width: 768px)'
+
+function getInitialViewMode() {
+  if (typeof window === 'undefined') {
+    return DESKTOP_VIEW_MODE
+  }
+
+  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches ? DESKTOP_VIEW_MODE : MOBILE_VIEW_MODE
+}
+
 export default function BookingPage() {
-  const [viewMode, setViewMode] = useState<BookingViewMode>('day')
+  const [viewMode, setViewMode] = useState<BookingViewMode>(() => getInitialViewMode())
 
   const {
     months,
     slots,
     selectedDate,
     selectedDay,
+    selectedSlot,
     selectedSlotId,
     loadingCalendar,
     loadingSlots,
@@ -27,7 +40,37 @@ export default function BookingPage() {
     handleDateSelection,
     handleSlotSelection,
     refreshCalendarAndSlots,
+    resetSelection,
   } = useBookingCalendar()
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const mediaQuery = window.matchMedia(DESKTOP_MEDIA_QUERY)
+
+    const syncViewMode = () => {
+      setViewMode((current) => {
+        const targetMode = mediaQuery.matches ? DESKTOP_VIEW_MODE : MOBILE_VIEW_MODE
+        return current === targetMode ? current : targetMode
+      })
+    }
+
+    syncViewMode()
+
+    const handleChange = () => {
+      syncViewMode()
+    }
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    mediaQuery.addListener(handleChange)
+    return () => mediaQuery.removeListener(handleChange)
+  }, [])
 
   const handleBookingSubmitSuccess = useCallback(async () => {
     handleSlotSelection('')
@@ -61,6 +104,8 @@ export default function BookingPage() {
     return `${selectedDay.weekday_label}, ${selectedDay.day_label} de ${selectedDay.month_label}`
   }, [selectedDay])
 
+  const selectedSlotLabel = selectedSlot?.label
+
   const handleCalendarDateSelection = useCallback(
     (date: string) => {
       clearMessages()
@@ -77,6 +122,20 @@ export default function BookingPage() {
     [clearMessages, handleSlotSelection],
   )
 
+  const handleViewModeChange = useCallback(
+    (nextMode: BookingViewMode) => {
+      clearMessages()
+      resetSelection()
+      setViewMode(nextMode)
+    },
+    [clearMessages, resetSelection],
+  )
+
+  const handleChangeDay = useCallback(() => {
+    clearMessages()
+    resetSelection()
+  }, [clearMessages, resetSelection])
+
   const submitHandler: React.FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
       await handleSubmit(event)
@@ -84,9 +143,14 @@ export default function BookingPage() {
     [handleSubmit],
   )
 
-  const shouldShowHeaderBadge = viewMode === 'day' && Boolean(selectedDayLabel)
+  const shouldShowHeaderBadge = viewMode === 'day' && Boolean(selectedDayLabel) && !selectedSlotId
+  const shouldShowForm = Boolean(selectedSlotId || submitError || successMessage)
 
   const calendarView = useMemo(() => {
+    if (selectedSlotId) {
+      return null
+    }
+
     if (viewMode === 'week') {
       return (
         <BookingWeekView
@@ -138,6 +202,7 @@ export default function BookingPage() {
       />
     )
   }, [
+    selectedSlotId,
     viewMode,
     months,
     loadingCalendar,
@@ -147,7 +212,6 @@ export default function BookingPage() {
     slots,
     loadingSlots,
     slotsError,
-    selectedSlotId,
     handleCalendarDateSelection,
     handleTimeSlotSelection,
   ])
@@ -209,33 +273,53 @@ export default function BookingPage() {
             <BookingHostCard />
           </div>
 
-          <div className="mt-10 grid gap-6 xl:grid-cols-[1.02fr_0.98fr] xl:items-start">
+          <div
+            className={`mt-10 grid gap-6 ${
+              shouldShowForm ? 'xl:grid-cols-[0.9fr_1.1fr] xl:items-start' : ''
+            }`}
+          >
             <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)] backdrop-blur sm:p-6">
               <BookingHeader selectedDayLabel={shouldShowHeaderBadge ? selectedDayLabel : undefined} />
 
               <div className="mt-5 border-t border-white/10 pt-5">
-                <BookingViewModeSwitcher value={viewMode} onChange={setViewMode} />
+                <div className="flex flex-wrap items-center gap-3">
+                  <BookingViewModeSwitcher value={viewMode} onChange={handleViewModeChange} />
+
+                  {selectedSlotId ? (
+                    <button
+                      type="button"
+                      onClick={handleChangeDay}
+                      className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/8"
+                    >
+                      Trocar dia
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               {calendarView}
             </section>
 
-            <BookingForm
-              form={form}
-              fieldErrors={fieldErrors}
-              loadingSubmit={loadingSubmit}
-              submitError={submitError}
-              successMessage={successMessage}
-              successPayload={successPayload}
-              selectedSlotId={selectedSlotId}
-              summaryLength={summaryLength}
-              onNameChange={handleNameChange}
-              onEmailChange={handleEmailChange}
-              onPhoneChange={handlePhoneChange}
-              onSummaryChange={handleSummaryChange}
-              onSubmit={submitHandler}
-              slotsPicker={null}
-            />
+            {shouldShowForm ? (
+              <BookingForm
+                form={form}
+                fieldErrors={fieldErrors}
+                loadingSubmit={loadingSubmit}
+                submitError={submitError}
+                successMessage={successMessage}
+                successPayload={successPayload}
+                selectedSlotId={selectedSlotId}
+                selectedDayLabel={selectedDayLabel}
+                selectedSlotLabel={selectedSlotLabel}
+                summaryLength={summaryLength}
+                onNameChange={handleNameChange}
+                onEmailChange={handleEmailChange}
+                onPhoneChange={handlePhoneChange}
+                onSummaryChange={handleSummaryChange}
+                onSubmit={submitHandler}
+                slotsPicker={null}
+              />
+            ) : null}
           </div>
         </main>
       </div>

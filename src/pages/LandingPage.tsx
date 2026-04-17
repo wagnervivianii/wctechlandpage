@@ -337,7 +337,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 href="mailto:wagner@wvtecsolutions.com.br"
                 className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/5"
               >
-                wagner@wvtecsolutions.com.br
+                wagner@wvtechsolutions.com.br
               </a>
               <a
                 href="/agendar"

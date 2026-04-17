@@ -1,4 +1,8 @@
-import type { BookingFieldErrors, BookingRequestPayload, BookingRequestResponse } from '../../types/booking'
+import type {
+  BookingFieldErrors,
+  BookingRequestPayload,
+  BookingRequestResponse,
+} from '../../types/booking'
 
 type BookingFormProps = {
   form: BookingRequestPayload
@@ -8,6 +12,8 @@ type BookingFormProps = {
   successMessage: string
   successPayload: BookingRequestResponse | null
   selectedSlotId: string
+  selectedDayLabel?: string
+  selectedSlotLabel?: string
   summaryLength: number
   onNameChange: (value: string) => void
   onEmailChange: (value: string) => void
@@ -25,6 +31,8 @@ export default function BookingForm({
   successMessage,
   successPayload,
   selectedSlotId,
+  selectedDayLabel,
+  selectedSlotLabel,
   summaryLength,
   onNameChange,
   onEmailChange,
@@ -33,13 +41,26 @@ export default function BookingForm({
   onSubmit,
   slotsPicker,
 }: BookingFormProps) {
+  const bookingSummaryLabel =
+    selectedDayLabel && selectedSlotLabel
+      ? `${selectedDayLabel} às ${selectedSlotLabel}`
+      : selectedDayLabel || selectedSlotLabel
+
   return (
     <section className="rounded-[1.8rem] border border-white/10 bg-slate-900/80 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.38)] backdrop-blur sm:p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.34em] text-slate-400">Pré-agendamento</p>
-      <h2 className="mt-3 text-2xl font-semibold text-white">Escolha um horário e envie seus dados</h2>
-      <p className="mt-3 text-sm leading-7 text-slate-300">
-        Depois do envio, o próximo passo será a confirmação por e-mail antes da análise final da solicitação.
+      <p className="text-xs font-semibold uppercase tracking-[0.34em] text-slate-400">
+        Pré-agendamento
       </p>
+      <h2 className="mt-3 text-2xl font-semibold text-white">Envie seus dados</h2>
+
+      {bookingSummaryLabel ? (
+        <div className="mt-5 rounded-[1.35rem] border border-cyan-400/20 bg-cyan-400/8 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-300">
+            Reunião escolhida
+          </p>
+          <p className="mt-2 text-sm font-medium leading-7 text-cyan-50">{bookingSummaryLabel}</p>
+        </div>
+      ) : null}
 
       {slotsPicker}
 
@@ -74,9 +95,6 @@ export default function BookingForm({
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
             placeholder="SEU NOME COMPLETO"
           />
-          <p className="mt-2 text-xs text-slate-400">
-            Aceitamos letras, acentos, espaços e hífen. O nome será salvo em maiúsculas.
-          </p>
           {fieldErrors.name ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.name}</p> : null}
         </div>
 
@@ -94,9 +112,6 @@ export default function BookingForm({
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
               placeholder="voce@empresa.com"
             />
-            <p className="mt-2 text-xs text-slate-400">
-              A validação real do e-mail acontecerá na etapa de confirmação por link.
-            </p>
             {fieldErrors.email ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.email}</p> : null}
           </div>
 
@@ -113,9 +128,6 @@ export default function BookingForm({
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
               placeholder="(11) 99999-9999"
             />
-            <p className="mt-2 text-xs text-slate-400">
-              Informe o número com DDD. A máscara é aplicada automaticamente.
-            </p>
             {fieldErrors.phone ? <p className="mt-2 text-xs text-rose-300">{fieldErrors.phone}</p> : null}
           </div>
         </div>
@@ -135,9 +147,7 @@ export default function BookingForm({
             maxLength={500}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-xs text-slate-400">
-              Descreva o contexto em pelo menos 50 e no máximo 500 caracteres, apenas com texto e pontuação básica.
-            </p>
+            <p className="text-xs text-slate-400">Mínimo de 50 e máximo de 500 caracteres.</p>
             <p className={`text-xs ${summaryLength > 460 ? 'text-cyan-300' : 'text-slate-400'}`}>
               {summaryLength}/500
             </p>
