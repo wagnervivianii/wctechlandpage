@@ -2,6 +2,7 @@ import type {
   AdminAvailabilityDayItem,
   AdminAvailabilityListResponse,
   AdminBookingApprovalPayload,
+  AdminBookingCancellationPayload,
   AdminBookingDecisionResponse,
   AdminBookingPendingReviewListResponse,
   AdminBookingRejectionPayload,
@@ -188,6 +189,20 @@ export class AdminApiClient {
     return parseResponse<AdminBookingDecisionResponse>(
       response,
       'Não foi possível aprovar a solicitação.',
+    )
+  }
+
+
+  async cancelBooking(token: string, bookingId: number, payload: AdminBookingCancellationPayload) {
+    const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminBookingDecisionResponse>(
+      response,
+      'Não foi possível cancelar a reunião.',
     )
   }
 

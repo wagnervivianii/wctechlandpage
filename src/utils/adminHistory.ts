@@ -68,7 +68,7 @@ export function getMeetingStatusLabel(meetingStatus: string) {
     case 'no_show':
       return 'Não compareceu'
     case 'scheduled':
-      return 'Aguardando desfecho'
+      return 'Reunião agendada'
     default:
       return meetingStatus
   }

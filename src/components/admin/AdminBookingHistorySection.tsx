@@ -39,7 +39,7 @@ function WeekView({ history }: { history: AdminBookingHistoryItem[] }) {
   if (weeks.length === 0) {
     return (
       <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-        Ainda não há reuniões passadas no histórico.
+        Ainda não há reuniões registradas na agenda.
       </div>
     )
   }
@@ -113,7 +113,7 @@ function MonthView({ history }: { history: AdminBookingHistoryItem[] }) {
   if (months.length === 0) {
     return (
       <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-        Ainda não há reuniões passadas no histórico.
+        Ainda não há reuniões registradas na agenda.
       </div>
     )
   }
@@ -201,11 +201,11 @@ export default function AdminBookingHistorySection({
   function toggleMaster() {
     setIsOpen((current) => {
       const next = !current
-      if (!next) {
+      if (next) {
+        onRequestFocus?.()
+      } else {
         setOpenDayKey(null)
         onClearFocus?.()
-      } else {
-        onRequestFocus?.()
       }
       return next
     })
@@ -216,8 +216,7 @@ export default function AdminBookingHistorySection({
   }
 
   return (
-    <section className={`rounded-[1.8rem] border bg-slate-900/80 shadow-[0_18px_60px_rgba(2,6,23,0.32)] backdrop-blur ${isFocused ? 'border-cyan-300/30' : 'border-white/10'}`}>
-      <button
+    <section className={`rounded-[1.8rem] border bg-slate-900/80 shadow-[0_18px_60px_rgba(2,6,23,0.32)] backdrop-blur ${isFocused ? 'border-cyan-300/30' : 'border-white/10'}`}>      <button
         type="button"
         onClick={toggleMaster}
         className="flex w-full items-start justify-between gap-4 rounded-[1.8rem] p-5 text-left transition hover:bg-white/5 sm:p-6"
@@ -231,7 +230,7 @@ export default function AdminBookingHistorySection({
               </span>
             ) : null}
           </div>
-          <h2 className="mt-3 text-2xl font-semibold text-white">Reuniões que já passaram pela agenda</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white">Reuniões registradas na agenda</h2>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
@@ -267,7 +266,7 @@ export default function AdminBookingHistorySection({
         <div className="border-t border-white/10 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
           <div className="mb-5 flex flex-col gap-3 rounded-[1.25rem] border border-cyan-300/15 bg-cyan-400/6 p-4 text-sm text-slate-200 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Ao abrir o histórico, o painel prioriza esta área para melhorar leitura, comparação e navegação entre dia, semana e mês.
+              Com a seção aberta, o painel entra em foco para evitar cards espremidos e manter a leitura da agenda com mais clareza.
             </p>
             {isFocused ? (
               <button
@@ -308,7 +307,7 @@ export default function AdminBookingHistorySection({
           {viewMode === 'day' ? (
             dayGroups.length === 0 ? (
               <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-                Ainda não há reuniões passadas no histórico.
+                Ainda não há reuniões registradas na agenda.
               </div>
             ) : (
               <div className="space-y-4">

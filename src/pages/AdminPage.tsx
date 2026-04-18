@@ -47,6 +47,7 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     reviewError,
     reviewSuccessMessage,
     approveBooking,
+    cancelBooking,
     rejectBooking,
   } = useAdminBookingReview({
     token,
@@ -107,7 +108,7 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
 
           {!authLoading && isAuthenticated && currentUser && historyEventId !== null ? (
             <div className="mx-auto max-w-6xl">
-              <AdminHistoryEventDetail history={history} eventId={historyEventId} />
+              <AdminHistoryEventDetail history={history} eventId={historyEventId} submitting={submittingReviewId === historyEventId} onCancel={cancelBooking} />
             </div>
           ) : null}
 

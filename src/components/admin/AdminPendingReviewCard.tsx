@@ -59,8 +59,6 @@ export default function AdminPendingReviewCard({
   onReject,
 }: AdminPendingReviewCardProps) {
   const [reviewMode, setReviewMode] = useState<ReviewMode>(null)
-  const [meetUrl, setMeetUrl] = useState('')
-  const [meetEventId, setMeetEventId] = useState('')
   const [meetingNotes, setMeetingNotes] = useState('')
   const [createClientWorkspace, setCreateClientWorkspace] = useState(true)
   const [createWorkspaceInvite, setCreateWorkspaceInvite] = useState(true)
@@ -75,8 +73,6 @@ export default function AdminPendingReviewCard({
     event.preventDefault()
 
     await onApprove(item.id, {
-      meet_url: meetUrl.trim() || null,
-      meet_event_id: meetEventId.trim() || null,
       meeting_notes: meetingNotes.trim() || null,
       create_client_workspace: createClientWorkspace,
       create_workspace_invite: createClientWorkspace ? createWorkspaceInvite : false,
@@ -180,33 +176,19 @@ export default function AdminPendingReviewCard({
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200">Aprovação</p>
             <h4 className="mt-2 text-lg font-semibold text-white">Preparar reunião e portal do cliente</h4>
             <p className="mt-2 text-sm leading-6 text-slate-200">
-              Você pode aprovar agora e já deixar a base pronta para o link do Meet, observações internas e acesso ao portal do cliente.
+              Você pode aprovar agora e deixar a base pronta para a reunião, observações internas e acesso ao portal do cliente.
+            </p>
+          </div>
+
+          <div className="rounded-[1.3rem] border border-emerald-300/15 bg-slate-950/45 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-200">Automação Google</p>
+            <p className="mt-3 text-sm leading-6 text-slate-200">
+              Ao confirmar a aprovação, o sistema criará automaticamente o evento no Google Calendar da WV,
+              gerará o link do Google Meet, gravará o ID do evento e enviará o e-mail ao cliente no padrão da WV Tech Solutions.
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-100">Link do Google Meet</span>
-              <input
-                type="url"
-                value={meetUrl}
-                onChange={(event) => setMeetUrl(event.target.value)}
-                placeholder="https://meet.google.com/..."
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-100">ID do evento</span>
-              <input
-                type="text"
-                value={meetEventId}
-                onChange={(event) => setMeetEventId(event.target.value)}
-                placeholder="evt_123"
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40"
-              />
-            </label>
-
             <label className="block md:col-span-2">
               <span className="mb-2 block text-sm font-medium text-slate-100">Observações internas</span>
               <textarea

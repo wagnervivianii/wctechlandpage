@@ -31,7 +31,7 @@ export default function AdminHistoryDayCard({
         className="flex w-full items-start justify-between gap-4 rounded-[1.6rem] p-4 text-left transition hover:bg-white/5 sm:p-5"
       >
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Dia do histórico</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Dia registrado</p>
           <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">{dayLabel}</h3>
 
           <div className="mt-4 flex flex-wrap gap-2">

@@ -51,6 +51,7 @@ export type AdminBookingHistoryItem = {
   phone: string
   subject_summary: string
   meet_url: string | null
+  meet_event_id: string | null
   meeting_notes: string | null
   transcript_summary: string | null
   has_transcript: boolean
@@ -147,13 +148,17 @@ export type AdminBookingPendingReviewListResponse = {
 }
 
 export type AdminBookingApprovalPayload = {
-  meet_url: string | null
-  meet_event_id: string | null
   meeting_notes: string | null
   create_client_workspace: boolean
   create_workspace_invite: boolean
   invite_ttl_hours: number
   portal_notes: string | null
+}
+
+
+export type AdminBookingCancellationPayload = {
+  cancellation_reason: string | null
+  meeting_notes: string | null
 }
 
 export type AdminBookingRejectionPayload = {

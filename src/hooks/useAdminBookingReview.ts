@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AdminApiError, adminApiClient } from '../services/AdminApiClient'
 import type {
   AdminBookingApprovalPayload,
+  AdminBookingCancellationPayload,
   AdminBookingPendingReviewItem,
   AdminBookingRejectionPayload,
 } from '../types/admin'
@@ -85,6 +86,27 @@ export function useAdminBookingReview({
     }
   }
 
+
+  async function cancelBooking(bookingId: number, payload: AdminBookingCancellationPayload) {
+    try {
+      setSubmittingReviewId(bookingId)
+      setReviewError('')
+      setReviewSuccessMessage('')
+
+      const response = await adminApiClient.cancelBooking(token, bookingId, payload)
+      await loadPendingReview()
+      await onDecisionApplied?.()
+
+      setReviewSuccessMessage(`Reunião de ${response.name} cancelada com sucesso.`)
+      return response
+    } catch (error) {
+      handleApiError(error, 'Não foi possível cancelar a reunião.')
+      throw error
+    } finally {
+      setSubmittingReviewId(null)
+    }
+  }
+
   async function rejectBooking(bookingId: number, payload: AdminBookingRejectionPayload) {
     try {
       setSubmittingReviewId(bookingId)
@@ -113,6 +135,7 @@ export function useAdminBookingReview({
     reviewSuccessMessage,
     loadPendingReview,
     approveBooking,
+    cancelBooking,
     rejectBooking,
     clearReviewMessages: () => {
       setReviewError('')
