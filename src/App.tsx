@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 
 import AdminPage from './pages/AdminPage'
+import BookingConfirmationPage from './pages/BookingConfirmationPage.tsx'
 import BookingPage from './pages/BookingPage'
 import LandingPage from './pages/LandingPage'
 
 function isSchedulePath(pathname: string) {
   return pathname === '/agendar' || pathname === '/agendar/'
+}
+
+function isBookingConfirmationPath(pathname: string) {
+  return pathname === '/agendar/confirmacao' || pathname === '/agendar/confirmacao/'
 }
 
 function isAdminPath(pathname: string) {
@@ -35,6 +40,10 @@ export default function App() {
 
   if (isSchedulePath(pathname)) {
     return <BookingPage />
+  }
+
+  if (isBookingConfirmationPath(pathname)) {
+    return <BookingConfirmationPage />
   }
 
   if (isAdminPath(pathname)) {
