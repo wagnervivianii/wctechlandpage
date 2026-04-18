@@ -66,6 +66,8 @@ type AdminMetricCard = {
   accent: string
 }
 
+type AdminSectionKey = 'availability' | 'pending' | 'history'
+
 function getWindowLimits() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -89,6 +91,19 @@ const defaultSlotDraft: SlotDraft = {
   end_time: '10:00',
   timezone_name: 'America/Sao_Paulo',
   is_active: true,
+}
+
+function getFocusTitle(section: AdminSectionKey | null) {
+  switch (section) {
+    case 'availability':
+      return 'Dias e horários válidos'
+    case 'pending':
+      return 'Solicitações prontas'
+    case 'history':
+      return 'Histórico da agenda'
+    default:
+      return ''
+  }
 }
 
 export default function AdminAvailabilityManager({
@@ -118,6 +133,7 @@ export default function AdminAvailabilityManager({
   const [slotDrafts, setSlotDrafts] = useState<Record<number, SlotDraft>>({})
   const [editingSlotIds, setEditingSlotIds] = useState<Record<number, boolean>>({})
   const [editingSlotDrafts, setEditingSlotDrafts] = useState<Record<number, SlotDraft>>({})
+  const [focusedSection, setFocusedSection] = useState<AdminSectionKey | null>(null)
 
   const activeSlotCount = useMemo(
     () => days.reduce((total, day) => total + day.slots.filter((slot) => slot.is_active).length, 0),
@@ -190,6 +206,11 @@ export default function AdminAvailabilityManager({
     event.preventDefault()
     await onCreateDay(dayDate, true)
   }
+
+  const clearFocus = () => setFocusedSection(null)
+  const focusAvailability = () => setFocusedSection('availability')
+  const focusPending = () => setFocusedSection('pending')
+  const focusHistory = () => setFocusedSection('history')
 
   return (
     <div className="space-y-6 lg:space-y-7">
@@ -270,41 +291,101 @@ export default function AdminAvailabilityManager({
         </div>
       </section>
 
-      <AdminActiveScheduleSection
-        days={days}
-        loadingDays={loadingDays}
-        submitting={submitting}
-        dayDrafts={slotDrafts}
-        editingSlotIds={editingSlotIds}
-        editingSlotDrafts={editingSlotDrafts}
-        onToggleDay={onToggleDay}
-        onUpdateDraftForDay={updateDraftForDay}
-        onStartEditingSlot={startEditingSlot}
-        onStopEditingSlot={stopEditingSlot}
-        onSetEditingSlotDraft={setEditingSlotDraft}
-        onCreateSlot={onCreateSlot}
-        onUpdateSlot={onUpdateSlot}
-        onDeleteSlot={onDeleteSlot}
-        onResetDayDraft={resetDayDraft}
-      />
+      {focusedSection !== null ? (
+        <section className="rounded-[1.5rem] border border-cyan-400/15 bg-cyan-400/6 px-4 py-4 shadow-[0_12px_32px_rgba(6,182,212,0.08)] sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Modo foco</p>
+              <p className="mt-1 text-sm text-slate-200">
+                Você está priorizando a seção <span className="font-semibold text-white">{getFocusTitle(focusedSection)}</span>.
+              </p>
+            </div>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:items-start">
-        <div className="min-w-0">
-          <AdminPendingReviewSection
-            items={pendingReviewItems}
-            loading={loadingPendingReview}
-            submittingReviewId={submittingReviewId}
-            error={reviewError}
-            successMessage={reviewSuccessMessage}
-            onApprove={onApproveBooking}
-            onReject={onRejectBooking}
-          />
-        </div>
+            <button
+              type="button"
+              onClick={clearFocus}
+              className="rounded-full border border-white/12 px-4 py-2.5 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5"
+            >
+              Voltar ao painel completo
+            </button>
+          </div>
+        </section>
+      ) : null}
 
-        <div className="min-w-0">
-          <AdminBookingHistorySection history={history} />
-        </div>
-      </section>
+      {(focusedSection === null || focusedSection === 'availability') ? (
+        <AdminActiveScheduleSection
+          isFocused={focusedSection === 'availability'}
+          onRequestFocus={focusAvailability}
+          onClearFocus={clearFocus}
+          days={days}
+          loadingDays={loadingDays}
+          submitting={submitting}
+          dayDrafts={slotDrafts}
+          editingSlotIds={editingSlotIds}
+          editingSlotDrafts={editingSlotDrafts}
+          onToggleDay={onToggleDay}
+          onUpdateDraftForDay={updateDraftForDay}
+          onStartEditingSlot={startEditingSlot}
+          onStopEditingSlot={stopEditingSlot}
+          onSetEditingSlotDraft={setEditingSlotDraft}
+          onCreateSlot={onCreateSlot}
+          onUpdateSlot={onUpdateSlot}
+          onDeleteSlot={onDeleteSlot}
+          onResetDayDraft={resetDayDraft}
+        />
+      ) : null}
+
+      {focusedSection === null ? (
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:items-start">
+          <div className="min-w-0">
+            <AdminPendingReviewSection
+              isFocused={false}
+              onRequestFocus={focusPending}
+              onClearFocus={clearFocus}
+              items={pendingReviewItems}
+              loading={loadingPendingReview}
+              submittingReviewId={submittingReviewId}
+              error={reviewError}
+              successMessage={reviewSuccessMessage}
+              onApprove={onApproveBooking}
+              onReject={onRejectBooking}
+            />
+          </div>
+
+          <div className="min-w-0">
+            <AdminBookingHistorySection
+              isFocused={false}
+              onRequestFocus={focusHistory}
+              onClearFocus={clearFocus}
+              history={history}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      {focusedSection === 'pending' ? (
+        <AdminPendingReviewSection
+          isFocused
+          onRequestFocus={focusPending}
+          onClearFocus={clearFocus}
+          items={pendingReviewItems}
+          loading={loadingPendingReview}
+          submittingReviewId={submittingReviewId}
+          error={reviewError}
+          successMessage={reviewSuccessMessage}
+          onApprove={onApproveBooking}
+          onReject={onRejectBooking}
+        />
+      ) : null}
+
+      {focusedSection === 'history' ? (
+        <AdminBookingHistorySection
+          isFocused
+          onRequestFocus={focusHistory}
+          onClearFocus={clearFocus}
+          history={history}
+        />
+      ) : null}
     </div>
   )
 }

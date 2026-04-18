@@ -33,6 +33,10 @@ const navigation = [
   { label: 'Contato', href: '#contato' },
 ]
 
+const quickAccessLinks = [
+  { label: 'Admin', href: '/admin' },
+]
+
 type LandingPageProps = {
   mobileMenuOpen: boolean
   setMobileMenuOpen: Dispatch<SetStateAction<boolean>>
@@ -75,9 +79,24 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   {item.label}
                 </a>
               ))}
+              {quickAccessLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/5"
+                >
+                  {item.label}
+                </a>
+              ))}
             </nav>
 
             <div className="hidden items-center gap-3 md:flex">
+              <a
+                href="/admin"
+                className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5 lg:hidden"
+              >
+                Admin
+              </a>
               <a
                 href="/agendar"
                 className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
@@ -135,13 +154,20 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   {item.label}
                 </a>
               ))}
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <a
                   href="/agendar"
                   onClick={closeMobileMenu}
                   className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
                 >
                   Agendar conversa
+                </a>
+                <a
+                  href="/admin"
+                  onClick={closeMobileMenu}
+                  className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
+                >
+                  Admin
                 </a>
                 <a
                   href="#servicos"

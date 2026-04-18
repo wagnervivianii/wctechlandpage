@@ -26,18 +26,18 @@ function getCopy(status: ConfirmationStatus) {
         eyebrow: 'Confirmação concluída',
         title: 'Solicitação confirmada com sucesso',
         body: [
-          'Recebemos a confirmação do seu endereço de e-mail e sua solicitação foi encaminhada para validação da nossa equipe.',
-          'Após a análise, você receberá a confirmação da reunião, o link do Google Meet agendado, uma mensagem de confirmação via WhatsApp e o acesso à sua área do cliente, onde ficarão disponíveis os registros das reuniões e suas transcrições durante a vigência do projeto.',
-          'Agradecemos pelo seu contato. Em breve retornaremos com a continuidade do atendimento.',
+          'Recebemos a confirmação do seu endereço de e-mail e sua solicitação seguiu para análise da nossa equipe.',
+          'Se o pedido for aprovado, você receberá a confirmação da reunião e o link do Google Meet pelos canais informados no agendamento.',
+          'Obrigado pelo contato. Em breve daremos continuidade ao atendimento.',
         ],
       }
     case 'already-confirmed':
       return {
         eyebrow: 'Confirmação já registrada',
-        title: 'Este endereço já foi confirmado',
+        title: 'Esta solicitação já foi confirmada',
         body: [
-          'Esta solicitação já havia sido confirmada anteriormente e permanece registrada para análise administrativa.',
-          'Se necessário, nossa equipe continuará o atendimento pelos canais já informados no pedido.',
+          'A confirmação deste e-mail já foi registrada anteriormente e o pedido continua em análise pela nossa equipe.',
+          'Agora é só aguardar o retorno com a confirmação da reunião pelos canais informados no agendamento.',
         ],
       }
     case 'expired':
@@ -46,7 +46,7 @@ function getCopy(status: ConfirmationStatus) {
         title: 'O link de confirmação expirou',
         body: [
           'O prazo de confirmação deste pedido foi encerrado e o link utilizado não está mais válido.',
-          'Se desejar prosseguir, volte para a agenda pública e envie uma nova solicitação.',
+          'Se ainda desejar falar conosco, volte ao site e envie uma nova solicitação.',
         ],
       }
     case 'invalid':
@@ -55,7 +55,7 @@ function getCopy(status: ConfirmationStatus) {
         title: 'Não foi possível validar esta solicitação',
         body: [
           'O link utilizado não corresponde a uma confirmação ativa em nosso sistema.',
-          'Recomendamos retornar à agenda pública e gerar um novo pedido, se necessário.',
+          'Se precisar, retorne ao site e gere um novo pedido de agendamento.',
         ],
       }
     default:
@@ -137,18 +137,12 @@ export default function BookingConfirmationPage() {
                 ))}
               </div>
 
-              <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
-                <a
-                  href="/agendar"
-                  className="w-full rounded-full bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-950 transition hover:bg-slate-200 sm:w-auto"
-                >
-                  Voltar para agenda
-                </a>
+              <div className="mt-8 flex w-full items-center justify-center">
                 <a
                   href="/"
                   className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:border-cyan-300/30 hover:bg-white/10 sm:w-auto"
                 >
-                  Ir para a página inicial
+                  Voltar ao site
                 </a>
               </div>
             </div>

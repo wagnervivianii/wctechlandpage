@@ -17,6 +17,9 @@ type SlotDraft = {
 }
 
 type AdminActiveScheduleSectionProps = {
+  isFocused?: boolean
+  onRequestFocus?: () => void
+  onClearFocus?: () => void
   days: AdminAvailabilityDayItem[]
   loadingDays: boolean
   submitting: boolean
@@ -145,6 +148,9 @@ function AgendaDayList({
 }
 
 export default function AdminActiveScheduleSection({
+  isFocused = false,
+  onRequestFocus,
+  onClearFocus,
   days,
   loadingDays,
   submitting,
@@ -421,15 +427,34 @@ export default function AdminActiveScheduleSection({
     )
   }
 
+  function handleToggleSection() {
+    setIsOpen((current) => {
+      const next = !current
+      if (next) {
+        onRequestFocus?.()
+      } else {
+        onClearFocus?.()
+      }
+      return next
+    })
+  }
+
   return (
-    <section className="rounded-[1.8rem] border border-white/10 bg-slate-900/80 shadow-[0_18px_60px_rgba(2,6,23,0.32)] backdrop-blur">
+    <section className={`rounded-[1.8rem] border bg-slate-900/80 shadow-[0_18px_60px_rgba(2,6,23,0.32)] backdrop-blur ${isFocused ? 'border-cyan-300/30' : 'border-white/10'}`}>
       <button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={handleToggleSection}
         className="flex w-full items-start justify-between gap-4 rounded-[1.8rem] p-5 text-left transition hover:bg-white/5 sm:p-6"
       >
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Agenda ativa</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">Agenda ativa</p>
+            {isFocused ? (
+              <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-200">
+                Em foco
+              </span>
+            ) : null}
+          </div>
           <h2 className="mt-3 text-2xl font-semibold text-white lg:text-[2rem]">Dias e horários válidos</h2>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -452,6 +477,20 @@ export default function AdminActiveScheduleSection({
 
       {isOpen ? (
         <div className="border-t border-white/10 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+          <div className="mb-5 flex flex-col gap-3 rounded-[1.25rem] border border-cyan-300/15 bg-cyan-400/6 p-4 text-sm text-slate-200 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Ao expandir a agenda ativa, o painel prioriza esta seção para dar mais espaço aos dias, horários e controles administrativos.
+            </p>
+            {isFocused ? (
+              <button
+                type="button"
+                onClick={onClearFocus}
+                className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5"
+              >
+                Voltar ao painel completo
+              </button>
+            ) : null}
+          </div>
           {loadingDays ? (
             <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/50 p-5 text-sm text-slate-300">
               Carregando disponibilidade administrativa...

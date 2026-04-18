@@ -94,6 +94,7 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
       setLoadingSubmit(true)
       setSubmitError('')
       setSuccessMessage('')
+      setSuccessPayload(null)
 
       const payload: BookingRequestPayload = {
         slot_id: selectedSlotId,
@@ -109,7 +110,7 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
 
       setSuccessPayload(data)
       setSuccessMessage(
-        'Pré-agendamento enviado. O horário já foi reservado e agora vamos encaminhar a confirmação para o seu e-mail antes da análise final.',
+        'Pré-agendamento enviado com sucesso. Reservamos este horário temporariamente e enviamos um e-mail de confirmação para dar continuidade à sua solicitação.',
       )
       setForm(initialBookingForm)
       setFieldErrors(initialFieldErrors)
@@ -125,6 +126,7 @@ export function useBookingForm({ selectedSlotId, onSubmitSuccess }: UseBookingFo
   const clearMessages = useCallback(() => {
     setSubmitError('')
     setSuccessMessage('')
+    setSuccessPayload(null)
   }, [])
 
   return {

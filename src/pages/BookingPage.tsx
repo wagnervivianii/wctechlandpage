@@ -105,6 +105,7 @@ export default function BookingPage() {
   }, [selectedDay])
 
   const selectedSlotLabel = selectedSlot?.label
+  const isSubmissionCompleted = Boolean(successMessage)
 
   const handleCalendarDateSelection = useCallback(
     (date: string) => {
@@ -147,7 +148,7 @@ export default function BookingPage() {
   const shouldShowForm = Boolean(selectedSlotId || submitError || successMessage)
 
   const calendarView = useMemo(() => {
-    if (selectedSlotId) {
+    if (selectedSlotId || isSubmissionCompleted) {
       return null
     }
 
@@ -203,6 +204,7 @@ export default function BookingPage() {
     )
   }, [
     selectedSlotId,
+    isSubmissionCompleted,
     viewMode,
     months,
     loadingCalendar,
@@ -274,31 +276,35 @@ export default function BookingPage() {
           </div>
 
           <div
-            className={`mt-10 grid gap-6 ${
-              shouldShowForm ? 'xl:grid-cols-[0.9fr_1.1fr] xl:items-start' : ''
-            }`}
+            className={
+              isSubmissionCompleted
+                ? 'mx-auto mt-10 max-w-2xl'
+                : `mt-10 grid gap-6 ${shouldShowForm ? 'xl:grid-cols-[0.9fr_1.1fr] xl:items-start' : ''}`
+            }
           >
-            <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)] backdrop-blur sm:p-6">
-              <BookingHeader selectedDayLabel={shouldShowHeaderBadge ? selectedDayLabel : undefined} />
+            {!isSubmissionCompleted ? (
+              <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.34)] backdrop-blur sm:p-6">
+                <BookingHeader selectedDayLabel={shouldShowHeaderBadge ? selectedDayLabel : undefined} />
 
-              <div className="mt-5 border-t border-white/10 pt-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <BookingViewModeSwitcher value={viewMode} onChange={handleViewModeChange} />
+                <div className="mt-5 border-t border-white/10 pt-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <BookingViewModeSwitcher value={viewMode} onChange={handleViewModeChange} />
 
-                  {selectedSlotId ? (
-                    <button
-                      type="button"
-                      onClick={handleChangeDay}
-                      className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/8"
-                    >
-                      Trocar dia
-                    </button>
-                  ) : null}
+                    {selectedSlotId ? (
+                      <button
+                        type="button"
+                        onClick={handleChangeDay}
+                        className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/8"
+                      >
+                        Trocar dia
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
-              {calendarView}
-            </section>
+                {calendarView}
+              </section>
+            ) : null}
 
             {shouldShowForm ? (
               <BookingForm
