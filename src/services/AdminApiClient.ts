@@ -6,6 +6,7 @@ import type {
   AdminBookingDecisionResponse,
   AdminBookingPendingReviewListResponse,
   AdminBookingRejectionPayload,
+  AdminClientWorkspaceListResponse,
   AdminDayTogglePayload,
   AdminDayUpsertPayload,
   AdminLoginPayload,
@@ -165,6 +166,18 @@ export class AdminApiClient {
     return parseResponse<AdminAvailabilityDayItem>(
       response,
       'Não foi possível remover o horário.',
+    )
+  }
+
+
+  async fetchClientWorkspaces(token: string) {
+    const response = await fetch('/api/admin/client-workspaces', {
+      headers: buildAuthHeaders(token),
+    })
+
+    return parseResponse<AdminClientWorkspaceListResponse>(
+      response,
+      'Não foi possível carregar os workspaces do cliente.',
     )
   }
 

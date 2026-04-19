@@ -74,6 +74,34 @@ export function getMeetingStatusLabel(meetingStatus: string) {
   }
 }
 
+
+export function getRequestStatusLabel(status: string) {
+  switch (status) {
+    case 'approved':
+      return 'Aprovada'
+    case 'cancelled_by_admin':
+      return 'Cancelada pela equipe'
+    case 'rejected':
+      return 'Rejeitada'
+    case 'email_confirmed_pending_admin_review':
+      return 'Aguardando análise'
+    default:
+      return status
+  }
+}
+
+export function getRequestStatusClasses(status: string) {
+  switch (status) {
+    case 'approved':
+      return 'bg-emerald-500/12 text-emerald-200 ring-1 ring-emerald-400/25'
+    case 'cancelled_by_admin':
+      return 'bg-rose-500/12 text-rose-200 ring-1 ring-rose-400/25'
+    case 'rejected':
+      return 'bg-amber-500/12 text-amber-200 ring-1 ring-amber-400/25'
+    default:
+      return 'bg-white/8 text-slate-300 ring-1 ring-white/10'
+  }
+}
 export function getMeetingStatusClasses(meetingStatus: string) {
   switch (meetingStatus) {
     case 'completed':

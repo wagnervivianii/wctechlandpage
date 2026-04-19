@@ -3,6 +3,8 @@ import {
   getHistoryEventTimeLabel,
   getMeetingStatusClasses,
   getMeetingStatusLabel,
+  getRequestStatusClasses,
+  getRequestStatusLabel,
 } from '../../utils/adminHistory'
 
 type AdminHistoryDayCardProps = {
@@ -22,6 +24,7 @@ export default function AdminHistoryDayCard({
 }: AdminHistoryDayCardProps) {
   const transcriptCount = items.filter((item) => item.has_transcript).length
   const completedCount = items.filter((item) => item.meeting_status === 'completed').length
+  const cancelledCount = items.filter((item) => item.status === 'cancelled_by_admin').length
 
   return (
     <article className="rounded-[1.6rem] border border-white/10 bg-white/5">
@@ -41,6 +44,10 @@ export default function AdminHistoryDayCard({
 
             <span className="rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/25">
               {completedCount} concluído{completedCount !== 1 ? 's' : ''}
+            </span>
+
+            <span className="rounded-full bg-rose-500/12 px-3 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/25">
+              {cancelledCount} cancelada{cancelledCount !== 1 ? 's' : ''}
             </span>
 
             <span
@@ -89,8 +96,8 @@ export default function AdminHistoryDayCard({
                       {getMeetingStatusLabel(item.meeting_status)}
                     </span>
 
-                    <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
-                      Solicitação: {item.status}
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getRequestStatusClasses(item.status)}`}>
+                      Solicitação: {getRequestStatusLabel(item.status)}
                     </span>
                   </div>
                 </div>
@@ -121,6 +128,20 @@ export default function AdminHistoryDayCard({
                     </a>
                   ) : null}
                 </div>
+
+                {item.status === 'cancelled_by_admin' ? (
+                  <div className="mt-4 rounded-[1.15rem] border border-rose-300/20 bg-rose-500/8 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-rose-200">Cancelamento</p>
+                    <p className="mt-3 text-sm leading-7 text-rose-50">
+                      {item.cancellation_reason || 'O cancelamento foi registrado pela equipe administrativa.'}
+                    </p>
+                    {item.cancelled_at ? (
+                      <p className="mt-3 text-xs font-medium uppercase tracking-[0.22em] text-rose-100/80">
+                        Cancelada em {new Date(item.cancelled_at).toLocaleString('pt-BR')}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>

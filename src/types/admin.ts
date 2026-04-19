@@ -59,6 +59,9 @@ export type AdminBookingHistoryItem = {
   contact_confirmed_at: string | null
   admin_reviewed_at: string | null
   rejection_reason: string | null
+  cancellation_reason: string | null
+  cancelled_at: string | null
+  google_calendar_cancelled: boolean
   can_schedule_again: boolean
   has_client_workspace: boolean
   client_workspace_status: string | null
@@ -107,6 +110,34 @@ export type AdminClientWorkspaceInviteItem = {
   sent_at: string | null
   accepted_at: string | null
   created_at: string
+}
+
+
+export type AdminClientWorkspaceSummaryItem = {
+  workspace_id: number
+  workspace_status: string
+  source_booking_request_id: number | null
+  source_booking_status: string
+  source_meeting_status: string
+  primary_contact_name: string
+  primary_contact_email: string
+  primary_contact_phone: string
+  portal_notes: string | null
+  activated_at: string | null
+  created_at: string
+  has_client_access: boolean
+  latest_invite_status: string | null
+  latest_invite_sent_at: string | null
+  latest_invite_accepted_at: string | null
+  meetings_count: number
+  visible_meetings_count: number
+  latest_meeting: AdminClientWorkspaceMeetingItem | null
+  invites: AdminClientWorkspaceInviteItem[]
+  meetings: AdminClientWorkspaceMeetingItem[]
+}
+
+export type AdminClientWorkspaceListResponse = {
+  items: AdminClientWorkspaceSummaryItem[]
 }
 
 export type AdminClientWorkspaceDetailResponse = {

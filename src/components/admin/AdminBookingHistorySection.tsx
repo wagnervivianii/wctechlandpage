@@ -197,6 +197,7 @@ export default function AdminBookingHistorySection({
   const dayGroups = useMemo(() => groupHistoryByDay(history), [history])
   const transcriptCount = history.filter((item) => item.has_transcript).length
   const completedCount = history.filter((item) => item.meeting_status === 'completed').length
+  const cancelledCount = history.filter((item) => item.status === 'cancelled_by_admin').length
 
   function toggleMaster() {
     setIsOpen((current) => {
@@ -239,6 +240,10 @@ export default function AdminBookingHistorySection({
 
             <span className="rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/25">
               {completedCount} concluído{completedCount !== 1 ? 's' : ''}
+            </span>
+
+            <span className="rounded-full bg-rose-500/12 px-3 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/25">
+              {cancelledCount} cancelada{cancelledCount !== 1 ? 's' : ''}
             </span>
 
             <span

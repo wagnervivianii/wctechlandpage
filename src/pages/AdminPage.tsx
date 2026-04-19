@@ -4,6 +4,7 @@ import AdminHistoryEventDetail from '../components/admin/AdminHistoryEventDetail
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useAdminAvailability } from '../hooks/useAdminAvailability'
 import { useAdminBookingReview } from '../hooks/useAdminBookingReview'
+import { useAdminClientWorkspaces } from '../hooks/useAdminClientWorkspaces'
 
 type AdminPageProps = {
   historyEventId?: number | null
@@ -40,6 +41,18 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     onUnauthorized: logout,
   })
 
+
+  const {
+    workspaces,
+    loadingWorkspaces,
+    workspaceError,
+    loadWorkspaces,
+  } = useAdminClientWorkspaces({
+    token,
+    enabled: isAuthenticated,
+    onUnauthorized: logout,
+  })
+
   const {
     pendingReviewItems,
     loadingPendingReview,
@@ -53,7 +66,10 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     token,
     enabled: isAuthenticated,
     onUnauthorized: logout,
-    onDecisionApplied: loadDays,
+    onDecisionApplied: async () => {
+      await loadDays()
+      await loadWorkspaces()
+    },
   })
 
   return (
@@ -134,6 +150,9 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
               onDeleteSlot={deleteSlot}
               onApproveBooking={approveBooking}
               onRejectBooking={rejectBooking}
+              clientWorkspaces={workspaces}
+              loadingClientWorkspaces={loadingWorkspaces}
+              clientWorkspaceError={workspaceError}
             />
           ) : null}
         </main>

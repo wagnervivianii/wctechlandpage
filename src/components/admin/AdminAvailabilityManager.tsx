@@ -5,9 +5,11 @@ import type {
   AdminBookingHistoryItem,
   AdminBookingPendingReviewItem,
   AdminBookingRejectionPayload,
+  AdminClientWorkspaceSummaryItem,
 } from '../../types/admin'
 import AdminActiveScheduleSection from './AdminActiveScheduleSection'
 import AdminBookingHistorySection from './AdminBookingHistorySection'
+import AdminClientWorkspaceSection from './AdminClientWorkspaceSection'
 import AdminPendingReviewSection from './AdminPendingReviewSection'
 
 type SlotDraft = {
@@ -58,6 +60,9 @@ type AdminAvailabilityManagerProps = {
   onDeleteSlot: (slotId: number) => Promise<void>
   onApproveBooking: (bookingId: number, payload: AdminBookingApprovalPayload) => Promise<unknown>
   onRejectBooking: (bookingId: number, payload: AdminBookingRejectionPayload) => Promise<unknown>
+  clientWorkspaces: AdminClientWorkspaceSummaryItem[]
+  loadingClientWorkspaces: boolean
+  clientWorkspaceError: string
 }
 
 type AdminMetricCard = {
@@ -66,7 +71,7 @@ type AdminMetricCard = {
   accent: string
 }
 
-type AdminSectionKey = 'availability' | 'pending' | 'history'
+type AdminSectionKey = 'availability' | 'pending' | 'history' | 'clientWorkspace'
 
 function getWindowLimits() {
   const now = new Date()
@@ -101,6 +106,8 @@ function getFocusTitle(section: AdminSectionKey | null) {
       return 'Solicitações prontas'
     case 'history':
       return 'Histórico da agenda'
+    case 'clientWorkspace':
+      return 'Portal do cliente'
     default:
       return ''
   }
@@ -127,6 +134,9 @@ export default function AdminAvailabilityManager({
   onDeleteSlot,
   onApproveBooking,
   onRejectBooking,
+  clientWorkspaces,
+  loadingClientWorkspaces,
+  clientWorkspaceError,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
@@ -144,6 +154,14 @@ export default function AdminAvailabilityManager({
     [history],
   )
   const transcriptCount = useMemo(() => history.filter((item) => item.has_transcript).length, [history])
+  const cancelledCount = useMemo(
+    () => history.filter((item) => item.status === 'cancelled_by_admin').length,
+    [history],
+  )
+  const activeClientCount = useMemo(
+    () => clientWorkspaces.filter((item) => item.has_client_access).length,
+    [clientWorkspaces],
+  )
 
   const metrics = useMemo<AdminMetricCard[]>(
     () => [
@@ -172,8 +190,18 @@ export default function AdminAvailabilityManager({
         value: String(completedCount),
         accent: 'border-fuchsia-300/20 bg-fuchsia-500/10 text-fuchsia-100',
       },
+      {
+        label: 'Canceladas',
+        value: String(cancelledCount),
+        accent: 'border-rose-300/20 bg-rose-500/10 text-rose-100',
+      },
+      {
+        label: 'Clientes ativos',
+        value: String(activeClientCount),
+        accent: 'border-teal-300/20 bg-teal-500/10 text-teal-100',
+      },
     ],
-    [activeSlotCount, completedCount, days.length, pendingReviewItems.length, transcriptCount],
+    [activeClientCount, activeSlotCount, cancelledCount, completedCount, days.length, pendingReviewItems.length, transcriptCount],
   )
 
   function updateDraftForDay(dayId: number, nextDraft: SlotDraft) {
@@ -211,6 +239,7 @@ export default function AdminAvailabilityManager({
   const focusAvailability = () => setFocusedSection('availability')
   const focusPending = () => setFocusedSection('pending')
   const focusHistory = () => setFocusedSection('history')
+  const focusClientWorkspace = () => setFocusedSection('clientWorkspace')
 
   return (
     <div className="space-y-6 lg:space-y-7">
@@ -384,6 +413,17 @@ export default function AdminAvailabilityManager({
           onRequestFocus={focusHistory}
           onClearFocus={clearFocus}
           history={history}
+        />
+      ) : null}
+
+      {(focusedSection === null || focusedSection === 'clientWorkspace') ? (
+        <AdminClientWorkspaceSection
+          isFocused={focusedSection === 'clientWorkspace'}
+          onRequestFocus={focusClientWorkspace}
+          onClearFocus={clearFocus}
+          items={clientWorkspaces}
+          loading={loadingClientWorkspaces}
+          error={clientWorkspaceError}
         />
       ) : null}
     </div>

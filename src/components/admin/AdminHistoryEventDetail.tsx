@@ -5,6 +5,8 @@ import {
   getHistoryEventTimeLabel,
   getMeetingStatusClasses,
   getMeetingStatusLabel,
+  getRequestStatusClasses,
+  getRequestStatusLabel,
 } from '../../utils/adminHistory'
 
 type AdminHistoryEventDetailProps = {
@@ -122,8 +124,8 @@ export default function AdminHistoryEventDetail({
             {getMeetingStatusLabel(item.meeting_status)}
           </span>
 
-          <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
-            Solicitação: {item.status}
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getRequestStatusClasses(item.status)}`}>
+            Solicitação: {getRequestStatusLabel(item.status)}
           </span>
 
           {item.has_transcript ? (
@@ -142,6 +144,28 @@ export default function AdminHistoryEventDetail({
         {feedbackSuccess ? (
           <div className="mt-5 rounded-[1.2rem] border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
             {feedbackSuccess}
+          </div>
+        ) : null}
+
+        {item.status === 'cancelled_by_admin' ? (
+          <div className="mt-5 rounded-[1.35rem] border border-rose-300/20 bg-rose-500/8 p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rose-200">Cancelamento registrado</p>
+            <h4 className="mt-2 text-lg font-semibold text-white">Reunião cancelada e mantida no histórico</h4>
+            <p className="mt-3 text-sm leading-7 text-slate-200">
+              {item.cancellation_reason || 'O cancelamento desta reunião foi registrado pela equipe administrativa.'}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {item.cancelled_at ? (
+                <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-200 ring-1 ring-white/10">
+                  Cancelada em {new Date(item.cancelled_at).toLocaleString('pt-BR')}
+                </span>
+              ) : null}
+
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.google_calendar_cancelled ? 'bg-rose-500/12 text-rose-100 ring-1 ring-rose-300/25' : 'bg-white/8 text-slate-300 ring-1 ring-white/10'}`}>
+                {item.google_calendar_cancelled ? 'Google Calendar cancelado' : 'Google Calendar sem confirmação local'}
+              </span>
+            </div>
           </div>
         ) : null}
 
