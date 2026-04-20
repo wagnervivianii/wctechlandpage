@@ -17,6 +17,8 @@ export function useAdminClientWorkspaces({
   const [workspaces, setWorkspaces] = useState<AdminClientWorkspaceSummaryItem[]>([])
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false)
   const [workspaceError, setWorkspaceError] = useState('')
+  const [generatingWorkspaceId, setGeneratingWorkspaceId] = useState<number | null>(null)
+  const [generatedInviteLinks, setGeneratedInviteLinks] = useState<Record<number, string>>({})
 
   const handleApiError = useCallback((error: unknown, fallbackMessage: string) => {
     if (error instanceof AdminApiError && error.status === 401) {
@@ -46,6 +48,30 @@ export function useAdminClientWorkspaces({
     }
   }, [enabled, handleApiError, token])
 
+  const generateWorkspaceInvite = useCallback(async (workspaceId: number, inviteTtlHours = 168) => {
+    if (!enabled || !token) {
+      return
+    }
+
+    try {
+      setGeneratingWorkspaceId(workspaceId)
+      setWorkspaceError('')
+      const response = await adminApiClient.generateClientWorkspaceInvite(token, workspaceId, {
+        invite_ttl_hours: inviteTtlHours,
+      })
+      setGeneratedInviteLinks((current) => ({
+        ...current,
+        [workspaceId]: response.setup_url || '',
+      }))
+      await loadWorkspaces()
+    } catch (error) {
+      handleApiError(error, 'Não foi possível gerar um novo acesso para o portal do cliente.')
+      throw error
+    } finally {
+      setGeneratingWorkspaceId(null)
+    }
+  }, [enabled, handleApiError, loadWorkspaces, token])
+
   useEffect(() => {
     void loadWorkspaces()
   }, [loadWorkspaces])
@@ -54,6 +80,9 @@ export function useAdminClientWorkspaces({
     workspaces,
     loadingWorkspaces,
     workspaceError,
+    generatingWorkspaceId,
+    generatedInviteLinks,
     loadWorkspaces,
+    generateWorkspaceInvite,
   }
 }

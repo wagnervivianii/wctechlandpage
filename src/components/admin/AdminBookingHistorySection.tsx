@@ -19,6 +19,9 @@ type AdminBookingHistorySectionProps = {
 }
 
 function EventChip({ item }: { item: AdminBookingHistoryItem }) {
+  const isCancelled = item.status === 'cancelled_by_admin'
+  const isCompleted = item.meeting_status === 'completed'
+
   return (
     <a
       href={`/admin/historico/${item.id}`}
@@ -28,9 +31,30 @@ function EventChip({ item }: { item: AdminBookingHistoryItem }) {
         {getHistoryEventTimeLabel(item)}
       </p>
       <p className="mt-1 truncate text-sm font-medium text-white">{item.name}</p>
+
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {isCancelled ? (
+          <span className="rounded-full bg-rose-500/12 px-2 py-1 text-[0.62rem] font-semibold text-rose-100 ring-1 ring-rose-300/25">
+            Cancelada
+          </span>
+        ) : null}
+
+        {isCompleted ? (
+          <span className="rounded-full bg-emerald-500/12 px-2 py-1 text-[0.62rem] font-semibold text-emerald-100 ring-1 ring-emerald-300/25">
+            Concluída
+          </span>
+        ) : null}
+
+        {isCancelled ? (
+          <span className={`rounded-full px-2 py-1 text-[0.62rem] font-semibold ${item.google_calendar_cancelled ? 'bg-rose-500/12 text-rose-100 ring-1 ring-rose-300/25' : 'bg-white/8 text-slate-300 ring-1 ring-white/10'}`}>
+            {item.google_calendar_cancelled ? 'Google ok' : 'Google pendente'}
+          </span>
+        ) : null}
+      </div>
     </a>
   )
 }
+
 
 function WeekView({ history }: { history: AdminBookingHistoryItem[] }) {
   const weeks = useMemo(() => groupHistoryByWeek(history), [history])

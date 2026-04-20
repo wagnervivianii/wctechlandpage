@@ -63,6 +63,9 @@ type AdminAvailabilityManagerProps = {
   clientWorkspaces: AdminClientWorkspaceSummaryItem[]
   loadingClientWorkspaces: boolean
   clientWorkspaceError: string
+  generatingWorkspaceId: number | null
+  generatedInviteLinks: Record<number, string>
+  onGenerateWorkspaceInvite: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
 }
 
 type AdminMetricCard = {
@@ -137,6 +140,9 @@ export default function AdminAvailabilityManager({
   clientWorkspaces,
   loadingClientWorkspaces,
   clientWorkspaceError,
+  generatingWorkspaceId,
+  generatedInviteLinks,
+  onGenerateWorkspaceInvite,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
@@ -424,6 +430,9 @@ export default function AdminAvailabilityManager({
           items={clientWorkspaces}
           loading={loadingClientWorkspaces}
           error={clientWorkspaceError}
+          generatingWorkspaceId={generatingWorkspaceId}
+          generatedInviteLinks={generatedInviteLinks}
+          onGenerateInvite={onGenerateWorkspaceInvite}
         />
       ) : null}
     </div>

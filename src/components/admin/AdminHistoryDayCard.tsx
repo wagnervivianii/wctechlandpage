@@ -135,11 +135,18 @@ export default function AdminHistoryDayCard({
                     <p className="mt-3 text-sm leading-7 text-rose-50">
                       {item.cancellation_reason || 'O cancelamento foi registrado pela equipe administrativa.'}
                     </p>
-                    {item.cancelled_at ? (
-                      <p className="mt-3 text-xs font-medium uppercase tracking-[0.22em] text-rose-100/80">
-                        Cancelada em {new Date(item.cancelled_at).toLocaleString('pt-BR')}
-                      </p>
-                    ) : null}
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.cancelled_at ? (
+                        <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-rose-50 ring-1 ring-white/10">
+                          Cancelada em {new Date(item.cancelled_at).toLocaleString('pt-BR')}
+                        </span>
+                      ) : null}
+
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.google_calendar_cancelled ? 'bg-rose-500/12 text-rose-100 ring-1 ring-rose-300/25' : 'bg-white/8 text-slate-300 ring-1 ring-white/10'}`}>
+                        {item.google_calendar_cancelled ? 'Google Calendar cancelado' : 'Google Calendar sem confirmação local'}
+                      </span>
+                    </div>
                   </div>
                 ) : null}
               </article>

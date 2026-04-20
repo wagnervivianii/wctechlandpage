@@ -46,7 +46,10 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     workspaces,
     loadingWorkspaces,
     workspaceError,
+    generatingWorkspaceId,
+    generatedInviteLinks,
     loadWorkspaces,
+    generateWorkspaceInvite,
   } = useAdminClientWorkspaces({
     token,
     enabled: isAuthenticated,
@@ -153,6 +156,9 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
               clientWorkspaces={workspaces}
               loadingClientWorkspaces={loadingWorkspaces}
               clientWorkspaceError={workspaceError}
+              generatingWorkspaceId={generatingWorkspaceId}
+              generatedInviteLinks={generatedInviteLinks}
+              onGenerateWorkspaceInvite={generateWorkspaceInvite}
             />
           ) : null}
         </main>

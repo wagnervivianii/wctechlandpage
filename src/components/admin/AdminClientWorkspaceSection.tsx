@@ -9,6 +9,9 @@ type AdminClientWorkspaceSectionProps = {
   isFocused?: boolean
   onRequestFocus?: () => void
   onClearFocus?: () => void
+  generatingWorkspaceId?: number | null
+  generatedInviteLinks?: Record<number, string>
+  onGenerateInvite?: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
 }
 
 function formatDateTime(value: string | null) {
@@ -48,6 +51,19 @@ function getWorkspaceStatusClasses(status: string) {
   }
 }
 
+function getAuthProviderLabel(value: string | null | undefined) {
+  switch (value) {
+    case 'google':
+      return 'Google'
+    case 'password_google':
+      return 'Senha + Google'
+    case 'password':
+      return 'Senha'
+    default:
+      return 'Ainda sem conta'
+  }
+}
+
 export default function AdminClientWorkspaceSection({
   items,
   loading,
@@ -55,6 +71,9 @@ export default function AdminClientWorkspaceSection({
   isFocused = false,
   onRequestFocus,
   onClearFocus,
+  generatingWorkspaceId = null,
+  generatedInviteLinks = {},
+  onGenerateInvite,
 }: AdminClientWorkspaceSectionProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [openWorkspaceIds, setOpenWorkspaceIds] = useState<Record<number, boolean>>({})
@@ -96,7 +115,7 @@ export default function AdminClientWorkspaceSection({
               </span>
             ) : null}
           </div>
-          <h2 className="mt-3 text-2xl font-semibold text-white lg:text-[1.9rem]">Clientes e documentos</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white lg:text-[1.9rem]">Clientes, acessos e materiais</h2>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${items.length > 0 ? 'bg-cyan-500/12 text-cyan-100 ring-cyan-300/25' : 'bg-white/8 text-slate-300 ring-white/10'}`}>
@@ -121,7 +140,7 @@ export default function AdminClientWorkspaceSection({
         <div className="border-t border-white/10 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
           <div className="mb-5 flex flex-col gap-3 rounded-[1.25rem] border border-cyan-300/15 bg-cyan-400/6 p-4 text-sm text-slate-200 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Aqui você acompanha quem já ativou a área do cliente, abre o detalhe do evento, acessa o link do Meet e visualiza os materiais já sincronizados da reunião.
+              Aqui você acompanha o status do acesso do cliente, visualiza o vínculo com Google ou senha, abre o Meet e consulta resumos, transcrições e materiais da reunião.
             </p>
             {isFocused ? (
               <button
@@ -157,6 +176,7 @@ export default function AdminClientWorkspaceSection({
               {sortedItems.map((item) => {
                 const isWorkspaceOpen = Boolean(openWorkspaceIds[item.workspace_id])
                 const latestMeeting = item.latest_meeting
+                const account = item.account
 
                 return (
                   <article key={item.workspace_id} className="rounded-[1.5rem] border border-white/10 bg-slate-950/60">
@@ -182,6 +202,10 @@ export default function AdminClientWorkspaceSection({
                           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.has_client_access ? 'bg-emerald-500/12 text-emerald-100 ring-1 ring-emerald-300/25' : 'bg-white/8 text-slate-300 ring-1 ring-white/10'}`}>
                             {item.has_client_access ? 'Cliente já acessou' : 'Aguardando primeiro acesso'}
                           </span>
+
+                          <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
+                            {getAuthProviderLabel(account?.auth_provider)}
+                          </span>
                         </div>
                       </div>
 
@@ -199,8 +223,8 @@ export default function AdminClientWorkspaceSection({
                           <p className="mt-2 text-sm text-white">{item.activated_at ? formatDateTime(item.activated_at) : item.latest_invite_accepted_at ? formatDateTime(item.latest_invite_accepted_at) : 'Ainda não acessou'}</p>
                         </div>
                         <div className="rounded-[1.1rem] border border-white/10 bg-white/5 p-3">
-                          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Reuniões</p>
-                          <p className="mt-2 text-sm text-white">{item.meetings_count} vinculada{item.meetings_count !== 1 ? 's' : ''}</p>
+                          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Último login</p>
+                          <p className="mt-2 text-sm text-white">{formatDateTime(account?.last_login_at ?? null)}</p>
                         </div>
                       </div>
 
@@ -253,16 +277,113 @@ export default function AdminClientWorkspaceSection({
                             <div className="mt-4 space-y-2 text-sm text-slate-300">
                               <p>Convite enviado: {formatDateTime(item.latest_invite_sent_at)}</p>
                               <p>Convite aceito: {formatDateTime(item.latest_invite_accepted_at)}</p>
+                              <p>Conta criada: {account ? formatDateTime(account.created_at) : 'Ainda não'}</p>
+                              <p>Credencial ativa: {getAuthProviderLabel(account?.auth_provider)}</p>
+                            </div>
+
+                            <div className="mt-4 flex flex-col gap-3">
+                              <button
+                                type="button"
+                                onClick={() => void onGenerateInvite?.(item.workspace_id, 168)}
+                                disabled={!onGenerateInvite || generatingWorkspaceId === item.workspace_id}
+                                className="w-full rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {generatingWorkspaceId === item.workspace_id ? 'Gerando novo acesso...' : 'Gerar novo link de acesso'}
+                              </button>
+
+                              {generatedInviteLinks[item.workspace_id] ? (
+                                <div className="rounded-[1rem] border border-cyan-300/15 bg-cyan-400/6 p-3">
+                                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-200">Novo link gerado</p>
+                                  <a
+                                    href={generatedInviteLinks[item.workspace_id]}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-2 block break-all text-sm text-cyan-100 underline underline-offset-4"
+                                  >
+                                    {generatedInviteLinks[item.workspace_id]}
+                                  </a>
+                                </div>
+                              ) : null}
                             </div>
                           </div>
 
                           <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Última reunião</p>
-                            <p className="mt-3 text-sm font-semibold text-white">{latestMeeting?.meeting_label ?? 'Ainda não há reunião sincronizada.'}</p>
-                            <p className="mt-3 text-sm leading-7 text-slate-200">
-                              {latestMeeting?.transcript_summary || latestMeeting?.meeting_notes || 'Ainda não há resumo ou observações disponíveis para esta reunião.'}
-                            </p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Conta do cliente</p>
+                            {account ? (
+                              <div className="mt-3 space-y-2 text-sm text-slate-200">
+                                <p><span className="text-slate-400">E-mail:</span> {account.email}</p>
+                                <p><span className="text-slate-400">Nome:</span> {account.full_name || '—'}</p>
+                                <p><span className="text-slate-400">Senha:</span> {account.has_password ? 'Definida' : 'Ainda não definida'}</p>
+                                <p><span className="text-slate-400">Google:</span> {account.google_linked ? 'Vinculado' : 'Não vinculado'}</p>
+                                <p><span className="text-slate-400">Último login:</span> {formatDateTime(account.last_login_at)}</p>
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-sm leading-7 text-slate-300">Ainda não existe conta autenticável vinculada a este workspace.</p>
+                            )}
                           </div>
+                        </div>
+
+                        <div className="mt-4 space-y-4">
+                          {item.meetings.length === 0 ? (
+                            <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+                              Ainda não há reunião sincronizada para este workspace.
+                            </div>
+                          ) : null}
+
+                          {item.meetings.map((meeting) => (
+                            <div key={meeting.id} className="rounded-[1.25rem] border border-white/10 bg-slate-950/60 p-4">
+                              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-300">Reunião</p>
+                                  <p className="mt-2 text-sm font-semibold text-white">{meeting.meeting_label}</p>
+                                  <div className="mt-3 flex flex-wrap gap-3">
+                                    {meeting.meet_url ? (
+                                      <a href={meeting.meet_url} target="_blank" rel="noreferrer" className="rounded-full bg-cyan-400/12 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18">
+                                        Abrir Meet
+                                      </a>
+                                    ) : null}
+                                    {meeting.recording_url ? (
+                                      <a href={meeting.recording_url} target="_blank" rel="noreferrer" className="rounded-full border border-emerald-300/25 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/18">
+                                        Abrir material
+                                      </a>
+                                    ) : null}
+                                  </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  <div className="rounded-[1.1rem] border border-white/10 bg-white/5 p-3">
+                                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Visível ao cliente</p>
+                                    <p className="mt-2 text-sm text-white">{meeting.is_visible_to_client ? 'Sim' : 'Não'}</p>
+                                  </div>
+                                  <div className="rounded-[1.1rem] border border-white/10 bg-white/5 p-3">
+                                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Sincronização</p>
+                                    <p className="mt-2 text-sm text-white">{formatDateTime(meeting.synced_from_booking_at)}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {meeting.transcript_summary ? (
+                                <div className="mt-4 rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
+                                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Resumo</p>
+                                  <p className="mt-3 text-sm leading-7 text-slate-200">{meeting.transcript_summary}</p>
+                                </div>
+                              ) : null}
+
+                              {meeting.transcript_text ? (
+                                <div className="mt-4 rounded-[1.15rem] border border-white/10 bg-slate-950/50 p-4">
+                                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Transcrição completa</p>
+                                  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-200">{meeting.transcript_text}</p>
+                                </div>
+                              ) : null}
+
+                              {meeting.meeting_notes ? (
+                                <div className="mt-4 rounded-[1.15rem] border border-cyan-300/15 bg-cyan-400/6 p-4">
+                                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-200">Observações</p>
+                                  <p className="mt-3 text-sm leading-7 text-slate-200">{meeting.meeting_notes}</p>
+                                </div>
+                              ) : null}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ) : null}

@@ -97,7 +97,10 @@ export type AdminClientWorkspaceMeetingItem = {
   recording_provider: string | null
   has_transcript: boolean
   transcript_summary: string | null
+  transcript_text: string | null
   meeting_notes: string | null
+  meeting_started_at: string | null
+  meeting_ended_at: string | null
   is_visible_to_client: boolean
   synced_from_booking_at: string | null
 }
@@ -112,6 +115,17 @@ export type AdminClientWorkspaceInviteItem = {
   created_at: string
 }
 
+export type AdminClientWorkspaceAccountItem = {
+  id: number
+  email: string
+  full_name: string | null
+  has_password: boolean
+  google_linked: boolean
+  auth_provider: string
+  google_picture_url: string | null
+  last_login_at: string | null
+  created_at: string
+}
 
 export type AdminClientWorkspaceSummaryItem = {
   workspace_id: number
@@ -132,6 +146,7 @@ export type AdminClientWorkspaceSummaryItem = {
   meetings_count: number
   visible_meetings_count: number
   latest_meeting: AdminClientWorkspaceMeetingItem | null
+  account: AdminClientWorkspaceAccountItem | null
   invites: AdminClientWorkspaceInviteItem[]
   meetings: AdminClientWorkspaceMeetingItem[]
 }
@@ -152,10 +167,16 @@ export type AdminClientWorkspaceDetailResponse = {
   portal_notes: string | null
   activated_at: string | null
   created_at: string
+  account: AdminClientWorkspaceAccountItem | null
   meetings: AdminClientWorkspaceMeetingItem[]
   invites: AdminClientWorkspaceInviteItem[]
   setup_token: string | null
   setup_path: string | null
+  setup_url: string | null
+}
+
+export type AdminClientWorkspaceInviteRefreshPayload = {
+  invite_ttl_hours: number
 }
 
 export type AdminBookingPendingReviewItem = {
@@ -185,7 +206,6 @@ export type AdminBookingApprovalPayload = {
   invite_ttl_hours: number
   portal_notes: string | null
 }
-
 
 export type AdminBookingCancellationPayload = {
   cancellation_reason: string | null

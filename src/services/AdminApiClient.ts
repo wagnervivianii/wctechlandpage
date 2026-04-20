@@ -6,6 +6,8 @@ import type {
   AdminBookingDecisionResponse,
   AdminBookingPendingReviewListResponse,
   AdminBookingRejectionPayload,
+  AdminClientWorkspaceDetailResponse,
+  AdminClientWorkspaceInviteRefreshPayload,
   AdminClientWorkspaceListResponse,
   AdminDayTogglePayload,
   AdminDayUpsertPayload,
@@ -169,7 +171,6 @@ export class AdminApiClient {
     )
   }
 
-
   async fetchClientWorkspaces(token: string) {
     const response = await fetch('/api/admin/client-workspaces', {
       headers: buildAuthHeaders(token),
@@ -178,6 +179,23 @@ export class AdminApiClient {
     return parseResponse<AdminClientWorkspaceListResponse>(
       response,
       'Não foi possível carregar os workspaces do cliente.',
+    )
+  }
+
+  async generateClientWorkspaceInvite(
+    token: string,
+    workspaceId: number,
+    payload: AdminClientWorkspaceInviteRefreshPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/invite`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceDetailResponse>(
+      response,
+      'Não foi possível gerar um novo acesso para o portal do cliente.',
     )
   }
 
@@ -204,7 +222,6 @@ export class AdminApiClient {
       'Não foi possível aprovar a solicitação.',
     )
   }
-
 
   async cancelBooking(token: string, bookingId: number, payload: AdminBookingCancellationPayload) {
     const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
