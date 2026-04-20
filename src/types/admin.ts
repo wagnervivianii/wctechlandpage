@@ -88,6 +88,48 @@ export type AdminSlotUpsertPayload = {
   is_active: boolean
 }
 
+
+export type AdminClientWorkspaceDriveFolderItem = {
+  folder_id: string
+  folder_name: string
+  web_view_link: string
+}
+
+export type AdminClientWorkspaceDriveInfo = {
+  sync_status: string
+  sync_error: string | null
+  synced_at: string | null
+  root: AdminClientWorkspaceDriveFolderItem | null
+  meet_artifacts: AdminClientWorkspaceDriveFolderItem | null
+  client_uploads: AdminClientWorkspaceDriveFolderItem | null
+  generated_documents: AdminClientWorkspaceDriveFolderItem | null
+  archive: AdminClientWorkspaceDriveFolderItem | null
+}
+
+export type AdminClientWorkspaceMeetingArtifactItem = {
+  id: number
+  artifact_type: string
+  artifact_status: string
+  artifact_label: string
+  source_provider: string | null
+  google_conference_record_name: string | null
+  google_artifact_resource_name: string | null
+  source_download_url: string | null
+  drive_file_id: string | null
+  drive_file_name: string | null
+  drive_web_view_link: string | null
+  mime_type: string | null
+  file_size_bytes: number | null
+  text_content: string | null
+  summary_text: string | null
+  metadata_json: Record<string, unknown> | null
+  captured_at: string | null
+  last_synced_at: string | null
+  is_visible_to_client: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type AdminClientWorkspaceMeetingItem = {
   id: number
   booking_request_id: number
@@ -103,6 +145,7 @@ export type AdminClientWorkspaceMeetingItem = {
   meeting_ended_at: string | null
   is_visible_to_client: boolean
   synced_from_booking_at: string | null
+  artifacts: AdminClientWorkspaceMeetingArtifactItem[]
 }
 
 export type AdminClientWorkspaceInviteItem = {
@@ -149,6 +192,7 @@ export type AdminClientWorkspaceSummaryItem = {
   account: AdminClientWorkspaceAccountItem | null
   invites: AdminClientWorkspaceInviteItem[]
   meetings: AdminClientWorkspaceMeetingItem[]
+  drive: AdminClientWorkspaceDriveInfo
 }
 
 export type AdminClientWorkspaceListResponse = {
@@ -170,6 +214,7 @@ export type AdminClientWorkspaceDetailResponse = {
   account: AdminClientWorkspaceAccountItem | null
   meetings: AdminClientWorkspaceMeetingItem[]
   invites: AdminClientWorkspaceInviteItem[]
+  drive: AdminClientWorkspaceDriveInfo
   setup_token: string | null
   setup_path: string | null
   setup_url: string | null
@@ -236,4 +281,35 @@ export type AdminBookingDecisionResponse = {
   rejection_reason: string | null
   can_schedule_again: boolean
   client_workspace: AdminClientWorkspaceDetailResponse | null
+}
+
+export type AdminClientWorkspaceDriveSyncResponse = AdminClientWorkspaceDetailResponse
+
+export type AdminClientWorkspaceMeetingArtifactBatchSyncPayload = {
+  max_meetings: number
+  force_resync: boolean
+}
+
+export type AdminClientWorkspaceMeetingArtifactBatchSyncItem = {
+  meeting_id: number
+  meeting_label: string
+  sync_status: string
+  message: string | null
+  conference_record_name: string | null
+  synchronized_at: string
+  artifacts_upserted: number
+  recordings_synced: number
+  transcripts_synced: number
+  notes_synced: number
+}
+
+export type AdminClientWorkspaceMeetingArtifactBatchSyncResponse = {
+  workspace_id: number
+  processed_meetings_count: number
+  eligible_meetings_count: number
+  synchronized_meetings_count: number
+  no_artifacts_available_count: number
+  conference_not_found_count: number
+  failed_meetings_count: number
+  items: AdminClientWorkspaceMeetingArtifactBatchSyncItem[]
 }

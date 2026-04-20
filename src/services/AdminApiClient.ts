@@ -7,8 +7,11 @@ import type {
   AdminBookingPendingReviewListResponse,
   AdminBookingRejectionPayload,
   AdminClientWorkspaceDetailResponse,
+  AdminClientWorkspaceDriveSyncResponse,
   AdminClientWorkspaceInviteRefreshPayload,
   AdminClientWorkspaceListResponse,
+  AdminClientWorkspaceMeetingArtifactBatchSyncPayload,
+  AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminDayTogglePayload,
   AdminDayUpsertPayload,
   AdminLoginPayload,
@@ -196,6 +199,36 @@ export class AdminApiClient {
     return parseResponse<AdminClientWorkspaceDetailResponse>(
       response,
       'Não foi possível gerar um novo acesso para o portal do cliente.',
+    )
+  }
+
+
+  async syncClientWorkspaceDrive(token: string, workspaceId: number) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/drive-sync`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+    })
+
+    return parseResponse<AdminClientWorkspaceDriveSyncResponse>(
+      response,
+      'Não foi possível sincronizar a estrutura do Google Drive do cliente.',
+    )
+  }
+
+  async syncPendingGoogleArtifacts(
+    token: string,
+    workspaceId: number,
+    payload: AdminClientWorkspaceMeetingArtifactBatchSyncPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/artifacts/sync-google-pending`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceMeetingArtifactBatchSyncResponse>(
+      response,
+      'Não foi possível verificar artefatos pendentes do Google Meet.',
     )
   }
 

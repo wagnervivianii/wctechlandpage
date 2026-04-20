@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import type { AdminClientWorkspaceSummaryItem } from '../../types/admin'
+import type { AdminClientWorkspaceMeetingArtifactBatchSyncResponse, AdminClientWorkspaceMeetingArtifactItem, AdminClientWorkspaceSummaryItem } from '../../types/admin'
 
 type AdminClientWorkspaceSectionProps = {
   items: AdminClientWorkspaceSummaryItem[]
@@ -11,7 +11,12 @@ type AdminClientWorkspaceSectionProps = {
   onClearFocus?: () => void
   generatingWorkspaceId?: number | null
   generatedInviteLinks?: Record<number, string>
+  syncingDriveWorkspaceId?: number | null
+  syncingGoogleWorkspaceId?: number | null
+  lastGoogleSyncByWorkspace?: Record<number, AdminClientWorkspaceMeetingArtifactBatchSyncResponse>
   onGenerateInvite?: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
+  onSyncWorkspaceDrive?: (workspaceId: number) => Promise<void>
+  onSyncPendingGoogleArtifacts?: (workspaceId: number, forceResync?: boolean) => Promise<AdminClientWorkspaceMeetingArtifactBatchSyncResponse | void>
 }
 
 function formatDateTime(value: string | null) {
@@ -51,6 +56,41 @@ function getWorkspaceStatusClasses(status: string) {
   }
 }
 
+
+
+function getDriveSyncLabel(status: string | null | undefined) {
+  switch (status) {
+    case 'ready':
+      return 'Drive pronto'
+    case 'pending_configuration':
+      return 'Aguardando configuração'
+    case 'failed':
+      return 'Falha no Drive'
+    default:
+      return status || 'Drive pendente'
+  }
+}
+
+
+function getArtifactTypeLabel(value: string) {
+  switch (value) {
+    case 'transcript':
+      return 'Transcrição'
+    case 'recording':
+      return 'Gravação'
+    case 'summary':
+      return 'Resumo'
+    case 'notes':
+      return 'Notas'
+    default:
+      return value
+  }
+}
+
+function getArtifactSummary(artifact: AdminClientWorkspaceMeetingArtifactItem) {
+  return artifact.summary_text || artifact.text_content || artifact.drive_file_name || 'Sem resumo disponível.'
+}
+
 function getAuthProviderLabel(value: string | null | undefined) {
   switch (value) {
     case 'google':
@@ -73,7 +113,12 @@ export default function AdminClientWorkspaceSection({
   onClearFocus,
   generatingWorkspaceId = null,
   generatedInviteLinks = {},
+  syncingDriveWorkspaceId = null,
+  syncingGoogleWorkspaceId = null,
+  lastGoogleSyncByWorkspace = {},
   onGenerateInvite,
+  onSyncWorkspaceDrive,
+  onSyncPendingGoogleArtifacts,
 }: AdminClientWorkspaceSectionProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [openWorkspaceIds, setOpenWorkspaceIds] = useState<Record<number, boolean>>({})
@@ -206,6 +251,10 @@ export default function AdminClientWorkspaceSection({
                           <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">
                             {getAuthProviderLabel(account?.auth_provider)}
                           </span>
+
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.drive.sync_status === 'ready' ? 'bg-emerald-500/12 text-emerald-100 ring-1 ring-emerald-300/25' : item.drive.sync_status === 'failed' ? 'bg-rose-500/12 text-rose-100 ring-1 ring-rose-300/25' : 'bg-white/8 text-slate-300 ring-1 ring-white/10'}`}>
+                            {getDriveSyncLabel(item.drive.sync_status)}
+                          </span>
                         </div>
                       </div>
 
@@ -284,6 +333,32 @@ export default function AdminClientWorkspaceSection({
                             <div className="mt-4 flex flex-col gap-3">
                               <button
                                 type="button"
+                                onClick={() => void onSyncWorkspaceDrive?.(item.workspace_id)}
+                                disabled={!onSyncWorkspaceDrive || syncingDriveWorkspaceId === item.workspace_id}
+                                className="w-full rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {syncingDriveWorkspaceId === item.workspace_id ? 'Sincronizando Drive...' : 'Sincronizar estrutura do Drive'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => void onSyncPendingGoogleArtifacts?.(item.workspace_id, false)}
+                                disabled={!onSyncPendingGoogleArtifacts || syncingGoogleWorkspaceId === item.workspace_id}
+                                className="w-full rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {syncingGoogleWorkspaceId === item.workspace_id ? 'Consultando Google Meet...' : 'Verificar artefatos pendentes'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => void onSyncPendingGoogleArtifacts?.(item.workspace_id, true)}
+                                disabled={!onSyncPendingGoogleArtifacts || syncingGoogleWorkspaceId === item.workspace_id}
+                                className="w-full rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {syncingGoogleWorkspaceId === item.workspace_id ? 'Forçando reprocessamento...' : 'Forçar nova verificação'}
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => void onGenerateInvite?.(item.workspace_id, 168)}
                                 disabled={!onGenerateInvite || generatingWorkspaceId === item.workspace_id}
                                 className="w-full rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
@@ -302,6 +377,42 @@ export default function AdminClientWorkspaceSection({
                                   >
                                     {generatedInviteLinks[item.workspace_id]}
                                   </a>
+                                </div>
+                              ) : null}
+
+                              <div className="rounded-[1rem] border border-white/10 bg-slate-950/50 p-3 text-sm text-slate-300">
+                                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Google Drive do cliente</p>
+                                <p className="mt-2 text-white">{getDriveSyncLabel(item.drive.sync_status)}</p>
+                                {item.drive.synced_at ? <p className="mt-2">Última sincronização: {formatDateTime(item.drive.synced_at)}</p> : null}
+                                {item.drive.root?.web_view_link ? (
+                                  <a href={item.drive.root.web_view_link} target="_blank" rel="noreferrer" className="mt-2 block break-all text-cyan-100 underline underline-offset-4">
+                                    Abrir pasta raiz do cliente
+                                  </a>
+                                ) : null}
+                                {item.drive.meet_artifacts?.web_view_link ? (
+                                  <a href={item.drive.meet_artifacts.web_view_link} target="_blank" rel="noreferrer" className="mt-2 block break-all text-cyan-100 underline underline-offset-4">
+                                    Abrir pasta 01_meet_artifacts
+                                  </a>
+                                ) : null}
+                                {item.drive.sync_error ? <p className="mt-2 text-rose-200">{item.drive.sync_error}</p> : null}
+                              </div>
+
+                              {lastGoogleSyncByWorkspace[item.workspace_id] ? (
+                                <div className="rounded-[1rem] border border-white/10 bg-slate-950/50 p-3 text-sm text-slate-300">
+                                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Última verificação de artefatos</p>
+                                  <p className="mt-2 text-white">
+                                    {lastGoogleSyncByWorkspace[item.workspace_id].synchronized_meetings_count > 0
+                                      ? 'Alguma reunião teve artefato sincronizado'
+                                      : lastGoogleSyncByWorkspace[item.workspace_id].no_artifacts_available_count > 0
+                                      ? 'Conference record encontrada, mas ainda sem arquivos prontos'
+                                      : 'Verificação concluída'}
+                                  </p>
+                                  <p className="mt-2">Reuniões processadas: {lastGoogleSyncByWorkspace[item.workspace_id].processed_meetings_count}</p>
+                                  <p>Sem artefatos prontos: {lastGoogleSyncByWorkspace[item.workspace_id].no_artifacts_available_count}</p>
+                                  <p>Falhas: {lastGoogleSyncByWorkspace[item.workspace_id].failed_meetings_count}</p>
+                                  {lastGoogleSyncByWorkspace[item.workspace_id].items[0]?.message ? (
+                                    <p className="mt-2 text-slate-200">{lastGoogleSyncByWorkspace[item.workspace_id].items[0].message}</p>
+                                  ) : null}
                                 </div>
                               ) : null}
                             </div>
@@ -361,6 +472,28 @@ export default function AdminClientWorkspaceSection({
                                   </div>
                                 </div>
                               </div>
+
+                              {meeting.artifacts.length > 0 ? (
+                                <div className="mt-4 grid gap-3">
+                                  {meeting.artifacts.map((artifact) => (
+                                    <div key={artifact.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span className="rounded-full bg-cyan-500/12 px-3 py-1 text-xs font-semibold text-cyan-100 ring-1 ring-cyan-300/25">{getArtifactTypeLabel(artifact.artifact_type)}</span>
+                                        <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/10">{artifact.artifact_status}</span>
+                                      </div>
+                                      <p className="mt-3 text-sm font-semibold text-white">{artifact.artifact_label}</p>
+                                      <p className="mt-3 text-sm leading-7 text-slate-200">{getArtifactSummary(artifact)}</p>
+                                      <div className="mt-3 flex flex-wrap gap-3">
+                                        {artifact.drive_web_view_link ? (
+                                          <a href={artifact.drive_web_view_link} target="_blank" rel="noreferrer" className="rounded-full border border-emerald-300/25 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/18">
+                                            Abrir no Drive
+                                          </a>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : null}
 
                               {meeting.transcript_summary ? (
                                 <div className="mt-4 rounded-[1.15rem] border border-white/10 bg-white/5 p-4">

@@ -48,8 +48,13 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     workspaceError,
     generatingWorkspaceId,
     generatedInviteLinks,
+    syncingDriveWorkspaceId,
+    syncingGoogleWorkspaceId,
+    lastGoogleSyncByWorkspace,
     loadWorkspaces,
     generateWorkspaceInvite,
+    syncWorkspaceDrive,
+    syncPendingGoogleArtifacts,
   } = useAdminClientWorkspaces({
     token,
     enabled: isAuthenticated,
@@ -158,7 +163,12 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
               clientWorkspaceError={workspaceError}
               generatingWorkspaceId={generatingWorkspaceId}
               generatedInviteLinks={generatedInviteLinks}
+              syncingDriveWorkspaceId={syncingDriveWorkspaceId}
+              syncingGoogleWorkspaceId={syncingGoogleWorkspaceId}
+              lastGoogleSyncByWorkspace={lastGoogleSyncByWorkspace}
               onGenerateWorkspaceInvite={generateWorkspaceInvite}
+              onSyncWorkspaceDrive={syncWorkspaceDrive}
+              onSyncPendingGoogleArtifacts={syncPendingGoogleArtifacts}
             />
           ) : null}
         </main>

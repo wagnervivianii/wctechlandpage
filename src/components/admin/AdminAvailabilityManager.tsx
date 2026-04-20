@@ -5,6 +5,7 @@ import type {
   AdminBookingHistoryItem,
   AdminBookingPendingReviewItem,
   AdminBookingRejectionPayload,
+  AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceSummaryItem,
 } from '../../types/admin'
 import AdminActiveScheduleSection from './AdminActiveScheduleSection'
@@ -65,7 +66,12 @@ type AdminAvailabilityManagerProps = {
   clientWorkspaceError: string
   generatingWorkspaceId: number | null
   generatedInviteLinks: Record<number, string>
+  syncingDriveWorkspaceId: number | null
+  syncingGoogleWorkspaceId: number | null
+  lastGoogleSyncByWorkspace: Record<number, AdminClientWorkspaceMeetingArtifactBatchSyncResponse>
   onGenerateWorkspaceInvite: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
+  onSyncWorkspaceDrive: (workspaceId: number) => Promise<void>
+  onSyncPendingGoogleArtifacts: (workspaceId: number, forceResync?: boolean) => Promise<AdminClientWorkspaceMeetingArtifactBatchSyncResponse | void>
 }
 
 type AdminMetricCard = {
@@ -142,7 +148,12 @@ export default function AdminAvailabilityManager({
   clientWorkspaceError,
   generatingWorkspaceId,
   generatedInviteLinks,
+  syncingDriveWorkspaceId,
+  syncingGoogleWorkspaceId,
+  lastGoogleSyncByWorkspace,
   onGenerateWorkspaceInvite,
+  onSyncWorkspaceDrive,
+  onSyncPendingGoogleArtifacts,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
@@ -432,7 +443,12 @@ export default function AdminAvailabilityManager({
           error={clientWorkspaceError}
           generatingWorkspaceId={generatingWorkspaceId}
           generatedInviteLinks={generatedInviteLinks}
+          syncingDriveWorkspaceId={syncingDriveWorkspaceId}
+          syncingGoogleWorkspaceId={syncingGoogleWorkspaceId}
+          lastGoogleSyncByWorkspace={lastGoogleSyncByWorkspace}
           onGenerateInvite={onGenerateWorkspaceInvite}
+          onSyncWorkspaceDrive={onSyncWorkspaceDrive}
+          onSyncPendingGoogleArtifacts={onSyncPendingGoogleArtifacts}
         />
       ) : null}
     </div>
