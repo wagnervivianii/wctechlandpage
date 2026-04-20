@@ -34,6 +34,7 @@ const navigation = [
 ]
 
 const quickAccessLinks = [
+  { label: 'Cliente', href: '/cliente/login' },
   { label: 'Admin', href: '/admin' },
 ]
 
@@ -91,6 +92,12 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             </nav>
 
             <div className="hidden items-center gap-3 md:flex">
+              <a
+                href="/cliente/login"
+                className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
+              >
+                Área do cliente
+              </a>
               <a
                 href="/admin"
                 className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5 lg:hidden"
@@ -154,13 +161,20 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   {item.label}
                 </a>
               ))}
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <a
                   href="/agendar"
                   onClick={closeMobileMenu}
                   className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
                 >
                   Agendar conversa
+                </a>
+                <a
+                  href="/cliente/login"
+                  onClick={closeMobileMenu}
+                  className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
+                >
+                  Área do cliente
                 </a>
                 <a
                   href="/admin"
@@ -202,12 +216,18 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 aplicada ao que faz o negócio girar.
               </p>
 
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
                 <a
                   href="/agendar"
                   className="w-full rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 sm:w-auto"
                 >
                   Agendar diagnóstico
+                </a>
+                <a
+                  href="/cliente/login"
+                  className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
+                >
+                  Área do cliente
                 </a>
                 <a
                   href="#servicos"
