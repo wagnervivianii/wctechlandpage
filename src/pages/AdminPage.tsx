@@ -52,9 +52,19 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     syncingGoogleWorkspaceId,
     lastGoogleSyncByWorkspace,
     loadWorkspaces,
+    loadWorkspaceFiles,
     generateWorkspaceInvite,
     syncWorkspaceDrive,
     syncPendingGoogleArtifacts,
+    workspaceFilesByWorkspace,
+    loadingWorkspaceFilesByWorkspace,
+    uploadingWorkspaceFileId,
+    processingWorkspaceFileActionKey,
+    uploadWorkspaceFile,
+    approveWorkspaceFile,
+    rejectWorkspaceFile,
+    archiveWorkspaceFile,
+    deleteWorkspaceFile,
   } = useAdminClientWorkspaces({
     token,
     enabled: isAuthenticated,
@@ -169,6 +179,16 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
               onGenerateWorkspaceInvite={generateWorkspaceInvite}
               onSyncWorkspaceDrive={syncWorkspaceDrive}
               onSyncPendingGoogleArtifacts={syncPendingGoogleArtifacts}
+              workspaceFilesByWorkspace={workspaceFilesByWorkspace}
+              loadingWorkspaceFilesByWorkspace={loadingWorkspaceFilesByWorkspace}
+              uploadingWorkspaceFileId={uploadingWorkspaceFileId}
+              processingWorkspaceFileActionKey={processingWorkspaceFileActionKey}
+              onLoadWorkspaceFiles={loadWorkspaceFiles}
+              onUploadWorkspaceFile={uploadWorkspaceFile}
+              onApproveWorkspaceFile={approveWorkspaceFile}
+              onRejectWorkspaceFile={rejectWorkspaceFile}
+              onArchiveWorkspaceFile={archiveWorkspaceFile}
+              onDeleteWorkspaceFile={deleteWorkspaceFile}
             />
           ) : null}
         </main>

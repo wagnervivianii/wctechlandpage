@@ -5,6 +5,8 @@ import type {
   AdminBookingHistoryItem,
   AdminBookingPendingReviewItem,
   AdminBookingRejectionPayload,
+  AdminClientWorkspaceFileActionPayload,
+  AdminClientWorkspaceFileListResponse,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceSummaryItem,
 } from '../../types/admin'
@@ -72,6 +74,27 @@ type AdminAvailabilityManagerProps = {
   onGenerateWorkspaceInvite: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
   onSyncWorkspaceDrive: (workspaceId: number) => Promise<void>
   onSyncPendingGoogleArtifacts: (workspaceId: number, forceResync?: boolean) => Promise<AdminClientWorkspaceMeetingArtifactBatchSyncResponse | void>
+  workspaceFilesByWorkspace: Record<number, AdminClientWorkspaceFileListResponse>
+  loadingWorkspaceFilesByWorkspace: Record<number, boolean>
+  uploadingWorkspaceFileId: number | null
+  processingWorkspaceFileActionKey: string | null
+  onLoadWorkspaceFiles: (workspaceId: number) => Promise<void>
+  onUploadWorkspaceFile: (
+    workspaceId: number,
+    payload: {
+      file: File
+      meetingId?: number | null
+      displayName?: string
+      description?: string
+      fileCategory?: string
+      targetBucket?: string
+      visibleToClient?: boolean
+    },
+  ) => Promise<unknown>
+  onApproveWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onRejectWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onArchiveWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onDeleteWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
 }
 
 type AdminMetricCard = {
@@ -186,6 +209,16 @@ export default function AdminAvailabilityManager({
   onGenerateWorkspaceInvite,
   onSyncWorkspaceDrive,
   onSyncPendingGoogleArtifacts,
+  workspaceFilesByWorkspace,
+  loadingWorkspaceFilesByWorkspace,
+  uploadingWorkspaceFileId,
+  processingWorkspaceFileActionKey,
+  onLoadWorkspaceFiles,
+  onUploadWorkspaceFile,
+  onApproveWorkspaceFile,
+  onRejectWorkspaceFile,
+  onArchiveWorkspaceFile,
+  onDeleteWorkspaceFile,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
@@ -823,6 +856,16 @@ export default function AdminAvailabilityManager({
           onGenerateInvite={onGenerateWorkspaceInvite}
           onSyncWorkspaceDrive={onSyncWorkspaceDrive}
           onSyncPendingGoogleArtifacts={onSyncPendingGoogleArtifacts}
+          workspaceFilesByWorkspace={workspaceFilesByWorkspace}
+          loadingWorkspaceFilesByWorkspace={loadingWorkspaceFilesByWorkspace}
+          uploadingWorkspaceFileId={uploadingWorkspaceFileId}
+          processingWorkspaceFileActionKey={processingWorkspaceFileActionKey}
+          onLoadWorkspaceFiles={onLoadWorkspaceFiles}
+          onUploadWorkspaceFile={onUploadWorkspaceFile}
+          onApproveWorkspaceFile={onApproveWorkspaceFile}
+          onRejectWorkspaceFile={onRejectWorkspaceFile}
+          onArchiveWorkspaceFile={onArchiveWorkspaceFile}
+          onDeleteWorkspaceFile={onDeleteWorkspaceFile}
         />
       ) : null}
     </div>

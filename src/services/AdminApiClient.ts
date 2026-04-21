@@ -8,6 +8,9 @@ import type {
   AdminBookingRejectionPayload,
   AdminClientWorkspaceDetailResponse,
   AdminClientWorkspaceDriveSyncResponse,
+  AdminClientWorkspaceFileActionPayload,
+  AdminClientWorkspaceFileItem,
+  AdminClientWorkspaceFileListResponse,
   AdminClientWorkspaceInviteRefreshPayload,
   AdminClientWorkspaceListResponse,
   AdminClientWorkspaceMeetingArtifactBatchSyncPayload,
@@ -202,7 +205,6 @@ export class AdminApiClient {
     )
   }
 
-
   async syncClientWorkspaceDrive(token: string, workspaceId: number) {
     const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/drive-sync`, {
       method: 'POST',
@@ -230,6 +232,121 @@ export class AdminApiClient {
       response,
       'Não foi possível verificar artefatos pendentes do Google Meet.',
     )
+  }
+
+  async fetchWorkspaceFiles(token: string, workspaceId: number) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files`, {
+      headers: buildAuthHeaders(token),
+    })
+
+    return parseResponse<AdminClientWorkspaceFileListResponse>(
+      response,
+      'Não foi possível carregar os arquivos deste workspace.',
+    )
+  }
+
+  async uploadWorkspaceFile(
+    token: string,
+    workspaceId: number,
+    payload: {
+      file: File
+      meetingId?: number | null
+      displayName?: string
+      description?: string
+      fileCategory?: string
+      targetBucket?: string
+      visibleToClient?: boolean
+    },
+  ) {
+    const formData = new FormData()
+    formData.append('file', payload.file)
+
+    if (typeof payload.meetingId === 'number') {
+      formData.append('meeting_id', String(payload.meetingId))
+    }
+
+    if (payload.displayName?.trim()) {
+      formData.append('display_name', payload.displayName.trim())
+    }
+
+    if (payload.description?.trim()) {
+      formData.append('description', payload.description.trim())
+    }
+
+    formData.append('file_category', payload.fileCategory?.trim() || 'generated_document')
+    formData.append('target_bucket', payload.targetBucket?.trim() || 'generated_documents')
+    formData.append('visible_to_client', payload.visibleToClient === false ? 'false' : 'true')
+
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files/admin-upload`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+      body: formData,
+    })
+
+    return parseResponse<AdminClientWorkspaceFileItem>(
+      response,
+      'Não foi possível enviar o arquivo administrativo para o Drive do cliente.',
+    )
+  }
+
+  async approveWorkspaceFile(
+    token: string,
+    workspaceId: number,
+    fileId: number,
+    payload: AdminClientWorkspaceFileActionPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files/${fileId}/approve`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceFileItem>(response, 'Não foi possível aprovar o arquivo selecionado.')
+  }
+
+  async rejectWorkspaceFile(
+    token: string,
+    workspaceId: number,
+    fileId: number,
+    payload: AdminClientWorkspaceFileActionPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files/${fileId}/reject`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceFileItem>(response, 'Não foi possível rejeitar o arquivo selecionado.')
+  }
+
+  async archiveWorkspaceFile(
+    token: string,
+    workspaceId: number,
+    fileId: number,
+    payload: AdminClientWorkspaceFileActionPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files/${fileId}/archive`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceFileItem>(response, 'Não foi possível arquivar o arquivo selecionado.')
+  }
+
+  async deleteWorkspaceFile(
+    token: string,
+    workspaceId: number,
+    fileId: number,
+    payload: AdminClientWorkspaceFileActionPayload,
+  ) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/files/${fileId}/delete`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceFileItem>(response, 'Não foi possível excluir o arquivo selecionado.')
   }
 
   async fetchPendingReviewBookings(token: string) {

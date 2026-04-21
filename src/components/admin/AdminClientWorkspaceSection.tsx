@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import AdminWorkspaceFilesPanel from './AdminWorkspaceFilesPanel'
 import type {
+  AdminClientWorkspaceFileActionPayload,
+  AdminClientWorkspaceFileListResponse,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceMeetingArtifactItem,
   AdminClientWorkspaceMeetingItem,
@@ -20,9 +23,30 @@ type AdminClientWorkspaceSectionProps = {
   syncingGoogleWorkspaceId?: number | null
   lastGoogleSyncByWorkspace?: Record<number, AdminClientWorkspaceMeetingArtifactBatchSyncResponse>
   highlightWorkspaceId?: number | null
+  workspaceFilesByWorkspace?: Record<number, AdminClientWorkspaceFileListResponse>
+  loadingWorkspaceFilesByWorkspace?: Record<number, boolean>
+  uploadingWorkspaceFileId?: number | null
+  processingWorkspaceFileActionKey?: string | null
   onGenerateInvite?: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
   onSyncWorkspaceDrive?: (workspaceId: number) => Promise<void>
   onSyncPendingGoogleArtifacts?: (workspaceId: number, forceResync?: boolean) => Promise<AdminClientWorkspaceMeetingArtifactBatchSyncResponse | void>
+  onLoadWorkspaceFiles?: (workspaceId: number) => Promise<void>
+  onUploadWorkspaceFile?: (
+    workspaceId: number,
+    payload: {
+      file: File
+      meetingId?: number | null
+      displayName?: string
+      description?: string
+      fileCategory?: string
+      targetBucket?: string
+      visibleToClient?: boolean
+    },
+  ) => Promise<unknown>
+  onApproveWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onRejectWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onArchiveWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onDeleteWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
 }
 
 type WorkspacePanelKey = 'access' | 'drive' | 'meetings' | 'artifacts' | 'files' | 'closure'
@@ -107,6 +131,22 @@ function getMeetingMaterialCount(meeting: AdminClientWorkspaceMeetingItem) {
   return meeting.artifacts.length + (meeting.recording_url ? 1 : 0)
 }
 
+function getWorkspaceFileBadge(fileList: AdminClientWorkspaceFileListResponse | undefined) {
+  if (!fileList) {
+    return 'Fluxo ativo'
+  }
+
+  if (fileList.pending_review_count > 0) {
+    return `${fileList.pending_review_count} pendente${fileList.pending_review_count !== 1 ? 's' : ''}`
+  }
+
+  if (fileList.items.length > 0) {
+    return `${fileList.items.length} arquivo${fileList.items.length !== 1 ? 's' : ''}`
+  }
+
+  return 'Sem arquivos ainda'
+}
+
 function WorkspacePanelCard({ title, eyebrow, badges, isActive, onClick }: { title: string; eyebrow: string; badges: string[]; isActive: boolean; onClick: () => void }) {
   return (
     <button
@@ -140,9 +180,19 @@ export default function AdminClientWorkspaceSection({
   syncingGoogleWorkspaceId = null,
   lastGoogleSyncByWorkspace = {},
   highlightWorkspaceId = null,
+  workspaceFilesByWorkspace = {},
+  loadingWorkspaceFilesByWorkspace = {},
+  uploadingWorkspaceFileId = null,
+  processingWorkspaceFileActionKey = null,
   onGenerateInvite,
   onSyncWorkspaceDrive,
   onSyncPendingGoogleArtifacts,
+  onLoadWorkspaceFiles,
+  onUploadWorkspaceFile,
+  onApproveWorkspaceFile,
+  onRejectWorkspaceFile,
+  onArchiveWorkspaceFile,
+  onDeleteWorkspaceFile,
 }: AdminClientWorkspaceSectionProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [openWorkspaceIds, setOpenWorkspaceIds] = useState<Record<number, boolean>>({})
@@ -178,6 +228,10 @@ export default function AdminClientWorkspaceSection({
 
   function selectPanel(workspaceId: number, panel: WorkspacePanelKey) {
     setWorkspacePanels((current) => ({ ...current, [workspaceId]: panel }))
+
+    if (panel === 'files') {
+      void onLoadWorkspaceFiles?.(workspaceId)
+    }
   }
 
   function toggleMeeting(workspaceId: number, meetingId: number) {
@@ -224,6 +278,7 @@ export default function AdminClientWorkspaceSection({
                 const account = item.account
                 const transcriptCount = item.meetings.filter((meeting) => meeting.has_transcript).length
                 const artifactCount = item.meetings.reduce((total, meeting) => total + meeting.artifacts.length, 0)
+                const workspaceFileList = workspaceFilesByWorkspace[item.workspace_id]
 
                 return (
                   <article key={item.workspace_id} className="rounded-[1.5rem] border border-white/10 bg-slate-950/60">
@@ -254,7 +309,7 @@ export default function AdminClientWorkspaceSection({
                           <WorkspacePanelCard title="Drive e organização" eyebrow="Drive" badges={[getDriveSyncLabel(item.drive.sync_status), item.drive.root ? 'Pasta raiz pronta' : 'Sem pasta raiz']} isActive={activePanel === 'drive'} onClick={() => selectPanel(item.workspace_id, 'drive')} />
                           <WorkspacePanelCard title="Reuniões e links" eyebrow="Meet" badges={[`${item.meetings_count} reunião${item.meetings_count !== 1 ? 'ões' : ''}`, item.latest_meeting?.meet_url ? 'Último link disponível' : 'Sem link recente']} isActive={activePanel === 'meetings'} onClick={() => selectPanel(item.workspace_id, 'meetings')} />
                           <WorkspacePanelCard title="Transcrições e materiais" eyebrow="Artifacts" badges={[`${artifactCount} material${artifactCount !== 1 ? 'is' : ''}`, `${transcriptCount} com transcrição`]} isActive={activePanel === 'artifacts'} onClick={() => selectPanel(item.workspace_id, 'artifacts')} />
-                          <WorkspacePanelCard title="Arquivos do cliente" eyebrow="Uploads" badges={['Fluxo em preparação', 'Upload admin > aprovação']} isActive={activePanel === 'files'} onClick={() => selectPanel(item.workspace_id, 'files')} />
+                          <WorkspacePanelCard title="Arquivos do cliente" eyebrow="Uploads" badges={[getWorkspaceFileBadge(workspaceFileList), 'Upload admin + revisão']} isActive={activePanel === 'files'} onClick={() => selectPanel(item.workspace_id, 'files')} />
                           <WorkspacePanelCard title="Encerramento e exclusão" eyebrow="Lifecycle" badges={['Backup por etapas', 'Exclusão controlada']} isActive={activePanel === 'closure'} onClick={() => selectPanel(item.workspace_id, 'closure')} />
                         </div>
 
@@ -348,11 +403,20 @@ export default function AdminClientWorkspaceSection({
                             </div>
                           ) : null}
 
-                          {activePanel === 'files' ? (
-                            <div className="grid gap-4 lg:grid-cols-2">
-                              <div className="rounded-[1.2rem] border border-amber-300/20 bg-amber-500/10 p-4 text-sm text-slate-200"><p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-amber-100">Arquivos do cliente</p><p className="mt-3 leading-7">Este bloco já fica preparado para o fluxo em que o cliente solicita um envio, o admin revisa e só então o material segue para a pasta correta do workspace.</p><button type="button" disabled className="mt-4 rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-slate-300 opacity-70">Aprovar e subir arquivo • em breve</button></div>
-                              <div className="rounded-[1.2rem] border border-white/10 bg-slate-950/50 p-4 text-sm text-slate-200"><p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Pasta alvo do cliente</p><p className="mt-3 leading-7">Quando o fluxo for ligado, os arquivos aprovados poderão seguir para a pasta de uploads do cliente ou para a pasta de documentos gerados, conforme o tipo do material.</p><div className="mt-4 space-y-2">{item.drive.client_uploads?.web_view_link ? <a href={item.drive.client_uploads.web_view_link} target="_blank" rel="noreferrer" className="block text-cyan-100 underline underline-offset-4">Abrir pasta 02_client_uploads</a> : null}{item.drive.generated_documents?.web_view_link ? <a href={item.drive.generated_documents.web_view_link} target="_blank" rel="noreferrer" className="block text-cyan-100 underline underline-offset-4">Abrir pasta 03_generated_documents</a> : null}</div></div>
-                            </div>
+                          {activePanel === 'files' && onLoadWorkspaceFiles && onUploadWorkspaceFile && onApproveWorkspaceFile && onRejectWorkspaceFile && onArchiveWorkspaceFile && onDeleteWorkspaceFile ? (
+                            <AdminWorkspaceFilesPanel
+                              workspace={item}
+                              fileList={workspaceFileList ?? null}
+                              loading={Boolean(loadingWorkspaceFilesByWorkspace[item.workspace_id])}
+                              uploading={uploadingWorkspaceFileId === item.workspace_id}
+                              processingActionKey={processingWorkspaceFileActionKey}
+                              onLoadFiles={onLoadWorkspaceFiles}
+                              onUploadFile={onUploadWorkspaceFile}
+                              onApproveFile={onApproveWorkspaceFile}
+                              onRejectFile={onRejectWorkspaceFile}
+                              onArchiveFile={onArchiveWorkspaceFile}
+                              onDeleteFile={onDeleteWorkspaceFile}
+                            />
                           ) : null}
 
                           {activePanel === 'closure' ? (

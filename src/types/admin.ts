@@ -88,7 +88,6 @@ export type AdminSlotUpsertPayload = {
   is_active: boolean
 }
 
-
 export type AdminClientWorkspaceDriveFolderItem = {
   folder_id: string
   folder_name: string
@@ -312,4 +311,43 @@ export type AdminClientWorkspaceMeetingArtifactBatchSyncResponse = {
   conference_not_found_count: number
   failed_meetings_count: number
   items: AdminClientWorkspaceMeetingArtifactBatchSyncItem[]
+}
+
+export type AdminClientWorkspaceFileItem = {
+  id: number
+  workspace_id: number
+  meeting_id: number | null
+  uploaded_by_role: string
+  file_category: string
+  review_status: string
+  visibility_scope: string
+  display_name: string | null
+  description: string | null
+  drive_file_id: string
+  drive_file_name: string | null
+  drive_web_view_link: string | null
+  mime_type: string | null
+  file_extension: string | null
+  file_size_bytes: number | null
+  review_notes: string | null
+  approved_at: string | null
+  reviewed_at: string | null
+  archived_at: string | null
+  deleted_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type AdminClientWorkspaceFileListResponse = {
+  workspace_id: number
+  pending_review_count: number
+  approved_count: number
+  archived_count: number
+  rejected_count: number
+  items: AdminClientWorkspaceFileItem[]
+}
+
+export type AdminClientWorkspaceFileActionPayload = {
+  review_notes: string | null
+  visible_to_client: boolean
 }

@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 
 const services = [
   {
@@ -16,27 +16,58 @@ const services = [
     title: 'BI e inteligência operacional',
     description: 'Dashboards, indicadores e leitura acionável para decidir com clareza.',
   },
+  {
+    index: '04',
+    title: 'Ciência de dados aplicada',
+    description:
+      'Modelos preditivos, estatística e análise avançada para antecipar cenários e apoiar decisões.',
+  },
 ]
 
-const technologies = ['Python', 'SQL', 'Power BI', 'React', 'APIs', 'Cloud']
+const technologies = ['Python', 'SQL', 'R', 'React', 'APIs', 'Linux', 'Cloud', 'PostgreSQL']
 
 const differentials = [
   'Percepção de negócio antes da tecnologia',
-  'Entrega pensada para operação real',
-  'Experiência em dados, automação e integração',
+  'Arquitetura open source para reduzir licenças',
+  'Entrega pensada para operação real do cliente',
+]
+
+const securityPillars = [
+  {
+    title: 'Controle de acesso estrito',
+    description:
+      'O acesso à plataforma é restrito a usuários autorizados, com autenticação por login e senha.',
+    icon: '🛡️',
+  },
+  {
+    title: 'Segregação de dados',
+    description:
+      'Isolamos dados por conta e perfil para garantir que cada usuário visualize apenas o que lhe é permitido.',
+    icon: '🔐',
+  },
+  {
+    title: 'Rastreabilidade total',
+    description:
+      'Monitoramos uso e alterações relevantes para auditar quem acessou qual dado e em que contexto.',
+    icon: '📍',
+  },
+  {
+    title: 'Minimização de exposição',
+    description:
+      'Aplicamos o princípio da necessidade, tratando apenas os dados indispensáveis para a finalidade da operação.',
+    icon: '🧭',
+  },
 ]
 
 const navigation = [
-  { label: 'Serviços', href: '#servicos' },
-  { label: 'Tecnologias', href: '#tecnologias' },
-  { label: 'Diferenciais', href: '#diferenciais' },
+  { label: 'Sobre', section: 'sobre' as const },
+  { label: 'Segurança', section: 'seguranca' as const },
   { label: 'Contato', href: '#contato' },
 ]
 
-const quickAccessLinks = [
-  { label: 'Cliente', href: '/cliente/login' },
-  { label: 'Admin', href: '/admin' },
-]
+const quickAccessLinks = [{ label: 'Admin', href: '/admin' }]
+
+type ExpandableSection = 'sobre' | 'seguranca' | null
 
 type LandingPageProps = {
   mobileMenuOpen: boolean
@@ -44,7 +75,28 @@ type LandingPageProps = {
 }
 
 export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: LandingPageProps) {
+  const [activeSection, setActiveSection] = useState<ExpandableSection>(null)
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
+
+  const toggleSection = (section: Exclude<ExpandableSection, null>) => {
+    setActiveSection((current) => {
+      const next = current === section ? null : section
+
+      if (next) {
+        window.requestAnimationFrame(() => {
+          document.getElementById(next)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+
+      return next
+    })
+  }
+
+  const handleNavSectionClick = (section: Exclude<ExpandableSection, null>) => {
+    closeMobileMenu()
+    toggleSection(section)
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -75,11 +127,22 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             </a>
 
             <nav className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
-              {navigation.map((item) => (
-                <a key={item.label} href={item.href} className="transition hover:text-cyan-300">
-                  {item.label}
-                </a>
-              ))}
+              {navigation.map((item) =>
+                'section' in item ? (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => handleNavSectionClick(item.section as 'sobre' | 'seguranca')}
+                    className="cursor-pointer transition hover:text-cyan-300"
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <a key={item.label} href={item.href} className="transition hover:text-cyan-300">
+                    {item.label}
+                  </a>
+                )
+              )}
               {quickAccessLinks.map((item) => (
                 <a
                   key={item.label}
@@ -99,23 +162,18 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 Área do cliente
               </a>
               <a
-                href="/admin"
-                className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5 lg:hidden"
-              >
-                Admin
-              </a>
-              <a
                 href="/agendar"
                 className="rounded-full border border-white/12 px-5 py-2.5 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
               >
                 Agendar conversa
               </a>
-              <a
-                href="#servicos"
+              <button
+                type="button"
+                onClick={() => toggleSection('sobre')}
                 className="rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
               >
-                Ver solução
-              </a>
+                Conhecer a visão
+              </button>
             </div>
 
             <button
@@ -151,16 +209,27 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             }`}
           >
             <nav className="mx-auto flex max-w-7xl flex-col gap-2">
-              {navigation.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={closeMobileMenu}
-                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10"
-                >
-                  {item.label}
-                </a>
-              ))}
+              {navigation.map((item) =>
+                'section' in item ? (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => handleNavSectionClick(item.section as 'sobre' | 'seguranca')}
+                    className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10"
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    onClick={closeMobileMenu}
+                    className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10"
+                  >
+                    {item.label}
+                  </a>
+                )
+              )}
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <a
                   href="/agendar"
@@ -183,13 +252,13 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 >
                   Admin
                 </a>
-                <a
-                  href="#servicos"
-                  onClick={closeMobileMenu}
+                <button
+                  type="button"
+                  onClick={() => handleNavSectionClick('sobre')}
                   className="rounded-full bg-cyan-400 px-5 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
                 >
-                  Ver solução
-                </a>
+                  Conhecer a visão
+                </button>
               </div>
             </nav>
           </div>
@@ -223,24 +292,26 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 >
                   Agendar diagnóstico
                 </a>
-                <a
-                  href="/cliente/login"
+                <button
+                  type="button"
+                  onClick={() => toggleSection('seguranca')}
                   className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
                 >
-                  Área do cliente
-                </a>
-                <a
-                  href="#servicos"
+                  Segurança e governança
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSection('sobre')}
                   className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-300/30 hover:bg-white/10 sm:w-auto"
                 >
-                  Explorar serviços
-                </a>
+                  Conhecer o diferencial
+                </button>
               </div>
             </div>
 
             <div className="mt-10 grid gap-6 lg:mt-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
               <div className="order-2 space-y-5 lg:order-1">
-                <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
                   {services.map((service) => (
                     <article
                       key={service.index}
@@ -308,7 +379,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             </div>
           </section>
 
-          <section id="servicos" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
+          <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
             <div className="grid gap-6 lg:grid-cols-3">
               <article className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">
@@ -322,10 +393,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   mais consistência e menos intervenção.
                 </p>
               </article>
-              <article
-                id="tecnologias"
-                className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6"
-              >
+              <article className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.34em] text-indigo-300">
                   Integração
                 </p>
@@ -333,8 +401,10 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   Dados conectados do jeito certo.
                 </h3>
                 <p className="mt-4 leading-7 text-slate-300">
-                  Estruturamos pipelines, APIs e fluxos para transformar dispersão em visão
-                  confiável.
+                  Estruturamos pipelines, APIs e fluxos com base em uma stack
+                  <strong className="font-semibold text-slate-100"> open source</strong> para
+                  reduzir dependência de terceiros, baixar custo de licenciamento e ampliar a
+                  autonomia do cliente.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   {technologies.map((item) => (
@@ -347,10 +417,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   ))}
                 </div>
               </article>
-              <article
-                id="diferenciais"
-                className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6"
-              >
+              <article className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.34em] text-emerald-300">
                   Decisão
                 </p>
@@ -364,6 +431,174 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               </article>
             </div>
           </section>
+
+          {activeSection === 'sobre' ? (
+            <section id="sobre" className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
+              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
+                <div className="grid gap-10 px-6 py-8 sm:px-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-center lg:px-10 lg:py-10">
+                  <div className="mx-auto flex w-full max-w-[280px] justify-center lg:max-w-none">
+                    <div className="relative h-64 w-64 overflow-hidden rounded-full border border-cyan-300/20 bg-slate-900 shadow-[0_0_40px_rgba(34,211,238,0.14)] sm:h-72 sm:w-72">
+                      <img
+                        src="/imagens/sobre.jpg"
+                        alt="Wagner Viviani, fundador da WV Tech Solutions"
+                        className="h-full w-full object-cover object-top"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">
+                          Sobre
+                        </p>
+                        <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+                          Visão estratégica de operação, dados e tecnologia no mesmo lugar.
+                        </h2>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSection(null)}
+                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300/30 hover:bg-white/10"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+
+                    <div className="mt-6 space-y-5 text-sm leading-8 text-slate-300 sm:text-base">
+                      <p>
+                        Após décadas atuando em agências de Trade Marketing e mergulhando no mundo
+                        da tecnologia, desenvolvi uma visão que{' '}
+                        <strong className="font-semibold text-slate-100">
+                          une o campo estratégico aos bastidores da programação
+                        </strong>
+                        . Minha trajetória de mais de 20 anos foi pavimentada “escovando bytes” e
+                        observando o modus operandi de grandes operações, o que me permitiu formar
+                        uma leitura analítica e crítica que vai além do horizonte comum.
+                      </p>
+
+                      <p>
+                        Percebi que a grande falha das agências não está na falta de dados, mas no{' '}
+                        <strong className="font-semibold text-slate-100">fluxo lógico</strong>.
+                        Identifiquei um padrão ineficiente: profissionais sobrecarregados
+                        manipulando planilhas e extraindo dados manualmente para alimentar sistemas.
+                        <strong className="font-semibold text-slate-100">
+                          {' '}Esse ciclo deixou de ser eficaz há muito tempo.
+                        </strong>
+                      </p>
+
+                      <p>
+                        Decidi mudar o jogo através do{' '}
+                        <strong className="font-semibold text-slate-100">Open Source</strong>.
+                        Desenvolvo softwares que eliminam dependência desnecessária de ferramentas
+                        de terceiros, reduzem custos de licenciamento e otimizam o tempo da
+                        operação dentro do próprio ecossistema do cliente.
+                      </p>
+
+                      <p>
+                        Seja no Trade Marketing, em sistemas de gestão de estoque ou em agendas
+                        inteligentes, minha filosofia é clara:
+                        <strong className="font-semibold text-slate-100">
+                          {' '}nem todo problema é tecnológico; muitas vezes, o problema é o
+                          processo.
+                        </strong>{' '}
+                        Meu papel é enxergar os gargalos que o próprio dono do negócio ainda não
+                        percebeu.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {activeSection === 'seguranca' ? (
+            <section
+              id="seguranca"
+              className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20"
+            >
+              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
+                <div className="px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">
+                        Segurança e Governança de Dados
+                      </p>
+                      <h2 className="mt-4 max-w-4xl text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+                        Dados tratados como ativos críticos do cliente, não como simples bits.
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection(null)}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300/30 hover:bg-white/10"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+
+                  <p className="mt-6 max-w-4xl text-sm leading-8 text-slate-300 sm:text-base">
+                    Na WV Techsolutions, a segurança da informação não é uma etapa posterior ao
+                    desenvolvimento; ela é{' '}
+                    <strong className="font-semibold text-slate-100">
+                      parte integrante e nativa de cada linha de código
+                    </strong>{' '}
+                    que escrevemos. Nosso compromisso é garantir que sua operação rode em um
+                    ambiente controlado, rastreável e juridicamente seguro.
+                  </p>
+
+                  <div className="mt-8 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                    {securityPillars.map((pillar) => (
+                      <article
+                        key={pillar.title}
+                        className="rounded-[1.6rem] border border-white/10 bg-slate-900/70 p-5"
+                      >
+                        <span className="text-2xl">{pillar.icon}</span>
+                        <h3 className="mt-4 text-lg font-semibold text-white">{pillar.title}</h3>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">{pillar.description}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                    <article className="rounded-[1.8rem] border border-white/10 bg-slate-900/70 p-6">
+                      <p className="text-xs font-semibold uppercase tracking-[0.34em] text-emerald-300">
+                        Conformidade com a LGPD
+                      </p>
+                      <p className="mt-4 text-sm leading-8 text-slate-300 sm:text-base">
+                        Toda a nossa plataforma é desenvolvida em{' '}
+                        <strong className="font-semibold text-slate-100">
+                          conformidade com a Lei Geral de Proteção de Dados
+                        </strong>{' '}
+                        e com uma governança ativa alinhada às melhores práticas técnicas e
+                        administrativas. Também mantemos procedimentos claros para registro,
+                        contenção e mitigação de incidentes, garantindo resposta coordenada e
+                        rápida.
+                      </p>
+                    </article>
+
+                    <article className="rounded-[1.8rem] border border-white/10 bg-slate-900/70 p-6">
+                      <p className="text-xs font-semibold uppercase tracking-[0.34em] text-amber-300">
+                        Regulamentação e contratos
+                      </p>
+                      <div className="mt-4 space-y-4 text-sm leading-8 text-slate-300 sm:text-base">
+                        <p>
+                          Todo projeto da WV Techsolutions é regido por{' '}
+                          <strong className="font-semibold text-slate-100">contrato formal</strong>,
+                          que define com clareza os papéis de Controlador e Operador de dados,
+                          responsabilidades contratuais e regras de acesso, prevenção e sigilo.
+                        </p>
+                        <p>
+                          A transparência contratual é parte do nosso compromisso para que a sua
+                          operação avance com segurança técnica, jurídica e operacional.
+                        </p>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
         </main>
 
         <footer id="contato" className="border-t border-white/8 bg-slate-950/90">
@@ -380,7 +615,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="mailto:wagner@wvtecsolutions.com.br"
+                href="mailto:wagner@wvtechsolutions.com.br"
                 className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/5"
               >
                 wagner@wvtechsolutions.com.br

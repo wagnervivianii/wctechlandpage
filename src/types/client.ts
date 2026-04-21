@@ -78,3 +78,28 @@ export type ClientPortalWorkspaceResponse = {
   created_at: string
   meetings: ClientPortalMeetingItem[]
 }
+
+export type ClientPortalWorkspaceFileItem = {
+  id: number
+  meeting_id: number | null
+  file_category: string
+  display_name: string | null
+  description: string | null
+  drive_file_name: string | null
+  drive_web_view_link: string | null
+  mime_type: string | null
+  file_extension: string | null
+  file_size_bytes: number | null
+  created_at: string
+}
+
+export type ClientPortalWorkspaceFilesResponse = {
+  workspace_id: number
+  items: ClientPortalWorkspaceFileItem[]
+}
+
+export type ClientPortalWorkspaceFileUploadResponse = {
+  message: string
+  review_status: string
+  item: ClientPortalWorkspaceFileItem
+}

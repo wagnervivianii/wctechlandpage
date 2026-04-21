@@ -3,6 +3,8 @@ import type {
   ClientAuthTokenResponse,
   ClientInvitePreviewResponse,
   ClientMeResponse,
+  ClientPortalWorkspaceFilesResponse,
+  ClientPortalWorkspaceFileUploadResponse,
   ClientPortalWorkspaceResponse,
 } from '../types/client'
 
@@ -161,6 +163,47 @@ export class ClientApiClient {
     })
 
     return parseResponse<ClientPortalWorkspaceResponse>(response, 'Não foi possível carregar sua área do cliente.')
+  }
+
+  async fetchWorkspaceFiles(token: string) {
+    const response = await fetch('/api/client/files', {
+      headers: buildAuthHeaders(token),
+    })
+
+    return parseResponse<ClientPortalWorkspaceFilesResponse>(response, 'Não foi possível carregar os arquivos do seu workspace.')
+  }
+
+  async uploadWorkspaceFile(
+    token: string,
+    payload: {
+      file: File
+      meetingId?: number | null
+      displayName?: string
+      description?: string
+    },
+  ) {
+    const formData = new FormData()
+    formData.append('file', payload.file)
+
+    if (typeof payload.meetingId === 'number') {
+      formData.append('meeting_id', String(payload.meetingId))
+    }
+
+    if (payload.displayName?.trim()) {
+      formData.append('display_name', payload.displayName.trim())
+    }
+
+    if (payload.description?.trim()) {
+      formData.append('description', payload.description.trim())
+    }
+
+    const response = await fetch('/api/client/files/upload', {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+      body: formData,
+    })
+
+    return parseResponse<ClientPortalWorkspaceFileUploadResponse>(response, 'Não foi possível enviar o arquivo para análise.')
   }
 }
 

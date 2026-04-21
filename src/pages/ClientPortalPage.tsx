@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   clearClientSession,
@@ -8,10 +8,13 @@ import {
   getClientToken,
   resolveClientDisplayName,
 } from '../lib/clientAuth'
+import ClientPortalFilesSection from '../components/client/ClientPortalFilesSection'
 import { ClientApiError, clientApiClient } from '../services/ClientApiClient'
 import type {
   ClientMeResponse,
   ClientPortalMeetingArtifactItem,
+  ClientPortalWorkspaceFileItem,
+  ClientPortalWorkspaceFileUploadResponse,
   ClientPortalWorkspaceResponse,
 } from '../types/client'
 
@@ -106,9 +109,15 @@ function PortalSectionCard({
 export default function ClientPortalPage() {
   const [me, setMe] = useState<ClientMeResponse | null>(null)
   const [workspace, setWorkspace] = useState<ClientPortalWorkspaceResponse | null>(null)
+  const [workspaceFiles, setWorkspaceFiles] = useState<ClientPortalWorkspaceFileItem[]>([])
+  const [lastUpload, setLastUpload] = useState<ClientPortalWorkspaceFileUploadResponse | null>(null)
+  const [clientToken, setClientToken] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingFiles, setLoadingFiles] = useState(false)
   const [error, setError] = useState('')
-  const [openSection, setOpenSection] = useState<ClientPortalSectionKey>('overview')
+  const [filesError, setFilesError] = useState('')
+  const [hasLoadedWorkspaceFiles, setHasLoadedWorkspaceFiles] = useState(false)
+  const [openSection, setOpenSection] = useState<ClientPortalSectionKey | null>(null)
   const [openMeetingId, setOpenMeetingId] = useState<number | null>(null)
   const avatarUrl = useMemo(() => getClientAvatarUrl(), [])
 
@@ -120,6 +129,7 @@ export default function ClientPortalPage() {
     }
 
     const token = currentToken
+    setClientToken(token)
     let isCancelled = false
 
     async function loadPortal() {
@@ -135,6 +145,8 @@ export default function ClientPortalPage() {
           setWorkspace(workspaceResponse)
           setOpenMeetingId(workspaceResponse.meetings[0]?.id ?? null)
           setError('')
+          setFilesError('')
+          setHasLoadedWorkspaceFiles(false)
         }
       } catch (err) {
         if (err instanceof ClientApiError && err.status === 401) {
@@ -173,18 +185,56 @@ export default function ClientPortalPage() {
     [meetings],
   )
 
+  const approvedFilesCount = workspaceFiles.length
+
+  const refreshWorkspaceFiles = useCallback(async () => {
+    if (!clientToken) {
+      return
+    }
+
+    try {
+      setLoadingFiles(true)
+      setFilesError('')
+      const response = await clientApiClient.fetchWorkspaceFiles(clientToken)
+      setWorkspaceFiles(response.items)
+      setHasLoadedWorkspaceFiles(true)
+    } catch (err) {
+      if (err instanceof ClientApiError && err.status === 401) {
+        clearClientSession()
+        window.location.replace(getClientLoginRoute())
+        return
+      }
+
+      setFilesError(err instanceof Error ? err.message : 'Não foi possível carregar os arquivos do seu workspace.')
+    } finally {
+      setLoadingFiles(false)
+    }
+  }, [clientToken])
+
+  function handleWorkspaceFileUploaded(response: ClientPortalWorkspaceFileUploadResponse) {
+    setLastUpload(response)
+  }
+
   function handleLogout() {
     clearClientSession()
     window.location.assign(getClientLoginRoute())
   }
 
   function toggleSection(section: ClientPortalSectionKey) {
-    setOpenSection((current) => (current === section ? 'overview' : section))
+    setOpenSection((current) => (current === section ? null : section))
   }
 
   function toggleMeeting(meetingId: number) {
     setOpenMeetingId((current) => (current === meetingId ? null : meetingId))
   }
+
+  useEffect(() => {
+    if (openSection !== 'files' || hasLoadedWorkspaceFiles || loadingFiles || !clientToken) {
+      return
+    }
+
+    void refreshWorkspaceFiles()
+  }, [clientToken, hasLoadedWorkspaceFiles, loadingFiles, openSection, refreshWorkspaceFiles])
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -461,30 +511,21 @@ export default function ClientPortalPage() {
               <PortalSectionCard
                 eyebrow="Arquivos do cliente"
                 title="Envios e aprovações"
-                badges={['Fluxo controlado pela administração', 'Uploads liberados apenas após aprovação']}
+                badges={[`${approvedFilesCount} arquivo${approvedFilesCount !== 1 ? 's' : ''} liberado${approvedFilesCount !== 1 ? 's' : ''}`, lastUpload ? 'Último envio registrado' : 'Fluxo ativo para novos anexos']}
                 isOpen={openSection === 'files'}
                 onToggle={() => toggleSection('files')}
               >
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-[1.3rem] border border-amber-300/20 bg-amber-500/10 p-4">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-amber-100">Anexos do cliente</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-200">
-                      Esta área já fica reservada para os arquivos do projeto. Antes de qualquer envio ser aceito, a equipe administrativa fará a triagem e autorizará a subida para o Drive do cliente.
-                    </p>
-                    <button type="button" disabled className="mt-4 rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-slate-300 opacity-70">
-                      Solicitar envio de arquivo • em breve
-                    </button>
-                  </div>
-
-                  <div className="rounded-[1.3rem] border border-white/10 bg-white/5 p-4">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Como funcionará</p>
-                    <ul className="mt-3 space-y-3 text-sm leading-7 text-slate-200">
-                      <li>1. Você selecionará o material que deseja anexar ao projeto.</li>
-                      <li>2. A equipe da WV Tech Solutions validará o envio, o contexto e as regras de segurança.</li>
-                      <li>3. Após aprovação, o arquivo seguirá para a pasta correta do seu workspace no Google Drive.</li>
-                    </ul>
-                  </div>
-                </div>
+                <ClientPortalFilesSection
+                  token={clientToken}
+                  workspace={workspace}
+                  files={workspaceFiles}
+                  loading={loadingFiles}
+                  error={filesError}
+                  onUnauthorized={handleLogout}
+                  onUploadSuccess={handleWorkspaceFileUploaded}
+                  onRefresh={refreshWorkspaceFiles}
+                  lastUpload={lastUpload}
+                />
               </PortalSectionCard>
             </div>
           ) : null}
