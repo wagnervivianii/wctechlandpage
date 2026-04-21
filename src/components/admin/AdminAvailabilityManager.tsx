@@ -75,12 +75,23 @@ type AdminAvailabilityManagerProps = {
 }
 
 type AdminMetricCard = {
+  key: OverviewMetricKey
   label: string
   value: string
   accent: string
+  hint: string
 }
 
 type AdminSectionKey = 'availability' | 'pending' | 'history' | 'clientWorkspace'
+type OverviewMetricKey = 'pending' | 'days' | 'slots' | 'transcripts' | 'completed' | 'cancelled' | 'clients'
+
+type ActiveSlotPreview = {
+  slotId: number
+  dayId: number
+  date: string
+  displayLabel: string
+  timeLabel: string
+}
 
 function getWindowLimits() {
   const now = new Date()
@@ -122,6 +133,27 @@ function getFocusTitle(section: AdminSectionKey | null) {
   }
 }
 
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return '—'
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return parsed.toLocaleString('pt-BR')
+}
+
+function sortByNewest<T extends { created_at?: string | null; booking_date?: string | null }>(items: T[]) {
+  return [...items].sort((left, right) => {
+    const leftValue = left.booking_date || left.created_at || ''
+    const rightValue = right.booking_date || right.created_at || ''
+    return rightValue.localeCompare(leftValue)
+  })
+}
+
 export default function AdminAvailabilityManager({
   username,
   days,
@@ -161,64 +193,104 @@ export default function AdminAvailabilityManager({
   const [editingSlotIds, setEditingSlotIds] = useState<Record<number, boolean>>({})
   const [editingSlotDrafts, setEditingSlotDrafts] = useState<Record<number, SlotDraft>>({})
   const [focusedSection, setFocusedSection] = useState<AdminSectionKey | null>(null)
+  const [overviewOpen, setOverviewOpen] = useState(false)
+  const [scheduleControlOpen, setScheduleControlOpen] = useState(false)
+  const [selectedMetric, setSelectedMetric] = useState<OverviewMetricKey | null>(null)
+  const [highlightDayId, setHighlightDayId] = useState<number | null>(null)
+  const [highlightWorkspaceId, setHighlightWorkspaceId] = useState<number | null>(null)
+
+  const sortedDays = useMemo(() => [...days].sort((left, right) => left.date.localeCompare(right.date)), [days])
+  const sortedPending = useMemo(
+    () => [...pendingReviewItems].sort((left, right) => right.contact_confirmed_at.localeCompare(left.contact_confirmed_at)),
+    [pendingReviewItems],
+  )
 
   const activeSlotCount = useMemo(
-    () => days.reduce((total, day) => total + day.slots.filter((slot) => slot.is_active).length, 0),
-    [days],
+    () => sortedDays.reduce((total, day) => total + day.slots.filter((slot) => slot.is_active).length, 0),
+    [sortedDays],
   )
-  const completedCount = useMemo(
-    () => history.filter((item) => item.meeting_status === 'completed').length,
+  const activeSlots = useMemo<ActiveSlotPreview[]>(
+    () =>
+      sortedDays.flatMap((day) =>
+        day.slots
+          .filter((slot) => slot.is_active)
+          .map((slot) => ({
+            slotId: slot.id,
+            dayId: day.id,
+            date: day.date,
+            displayLabel: day.display_label,
+            timeLabel: slot.label,
+          })),
+      ),
+    [sortedDays],
+  )
+  const completedItems = useMemo(
+    () => sortByNewest(history.filter((item) => item.meeting_status === 'completed')),
     [history],
   )
-  const transcriptCount = useMemo(() => history.filter((item) => item.has_transcript).length, [history])
-  const cancelledCount = useMemo(
-    () => history.filter((item) => item.status === 'cancelled_by_admin').length,
+  const transcriptItems = useMemo(() => sortByNewest(history.filter((item) => item.has_transcript)), [history])
+  const cancelledItems = useMemo(
+    () => sortByNewest(history.filter((item) => item.status === 'cancelled_by_admin')),
     [history],
   )
-  const activeClientCount = useMemo(
-    () => clientWorkspaces.filter((item) => item.has_client_access).length,
+  const activeClientItems = useMemo(
+    () => sortByNewest(clientWorkspaces.filter((item) => item.has_client_access)),
     [clientWorkspaces],
   )
 
   const metrics = useMemo<AdminMetricCard[]>(
     () => [
       {
+        key: 'pending',
         label: 'Pendentes',
-        value: String(pendingReviewItems.length),
+        value: String(sortedPending.length),
+        hint: 'Abrir pendências prontas',
         accent: 'border-amber-300/20 bg-amber-500/10 text-amber-100',
       },
       {
+        key: 'days',
         label: 'Dias ativos',
-        value: String(days.length),
+        value: String(sortedDays.length),
+        hint: 'Ver dias liberados',
         accent: 'border-cyan-300/20 bg-cyan-500/10 text-cyan-100',
       },
       {
+        key: 'slots',
         label: 'Horários ativos',
         value: String(activeSlotCount),
+        hint: 'Ver horários ativos',
         accent: 'border-indigo-300/20 bg-indigo-500/10 text-indigo-100',
       },
       {
+        key: 'transcripts',
         label: 'Com transcrição',
-        value: String(transcriptCount),
+        value: String(transcriptItems.length),
+        hint: 'Ver reuniões com transcrição',
         accent: 'border-emerald-300/20 bg-emerald-500/10 text-emerald-100',
       },
       {
+        key: 'completed',
         label: 'Concluídas',
-        value: String(completedCount),
+        value: String(completedItems.length),
+        hint: 'Ver reuniões concluídas',
         accent: 'border-fuchsia-300/20 bg-fuchsia-500/10 text-fuchsia-100',
       },
       {
+        key: 'cancelled',
         label: 'Canceladas',
-        value: String(cancelledCount),
+        value: String(cancelledItems.length),
+        hint: 'Ver reuniões canceladas',
         accent: 'border-rose-300/20 bg-rose-500/10 text-rose-100',
       },
       {
+        key: 'clients',
         label: 'Clientes ativos',
-        value: String(activeClientCount),
+        value: String(activeClientItems.length),
+        hint: 'Ver clientes com acesso',
         accent: 'border-teal-300/20 bg-teal-500/10 text-teal-100',
       },
     ],
-    [activeClientCount, activeSlotCount, cancelledCount, completedCount, days.length, pendingReviewItems.length, transcriptCount],
+    [activeClientItems.length, activeSlotCount, cancelledItems.length, completedItems.length, sortedDays.length, sortedPending.length, transcriptItems.length],
   )
 
   function updateDraftForDay(dayId: number, nextDraft: SlotDraft) {
@@ -252,11 +324,248 @@ export default function AdminAvailabilityManager({
     await onCreateDay(dayDate, true)
   }
 
-  const clearFocus = () => setFocusedSection(null)
+  const clearFocus = () => {
+    setFocusedSection(null)
+    setHighlightDayId(null)
+    setHighlightWorkspaceId(null)
+  }
   const focusAvailability = () => setFocusedSection('availability')
   const focusPending = () => setFocusedSection('pending')
   const focusHistory = () => setFocusedSection('history')
   const focusClientWorkspace = () => setFocusedSection('clientWorkspace')
+
+  function handleToggleOverview() {
+    setOverviewOpen((current) => {
+      const next = !current
+      if (!next) {
+        setSelectedMetric(null)
+      }
+      return next
+    })
+  }
+
+  function handleToggleScheduleControl() {
+    setScheduleControlOpen((current) => !current)
+  }
+
+  function handleMetricClick(metricKey: OverviewMetricKey) {
+    setOverviewOpen(true)
+    setSelectedMetric((current) => (current === metricKey ? null : metricKey))
+  }
+
+  function openAvailabilityDetail(dayId: number) {
+    setHighlightDayId(dayId)
+    setFocusedSection('availability')
+  }
+
+  function openClientWorkspaceDetail(workspaceId: number) {
+    setHighlightWorkspaceId(workspaceId)
+    setFocusedSection('clientWorkspace')
+  }
+
+  function renderMetricContent() {
+    if (selectedMetric === null) {
+      return null
+    }
+
+    const shell = (title: string, description: string, content: React.ReactNode) => (
+      <div className="rounded-[1.3rem] border border-white/10 bg-slate-950/60 p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Indicador selecionado</p>
+            <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">{title}</h3>
+            <p className="mt-2 text-sm text-slate-400">{description}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedMetric(null)}
+            className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/35 hover:bg-white/5"
+          >
+            Fechar lista
+          </button>
+        </div>
+        {content}
+      </div>
+    )
+
+    switch (selectedMetric) {
+      case 'pending':
+        return shell(
+          'Pendências prontas para triagem',
+          'Ao clicar em um item, o painel abre a seção de triagem administrativa para análise e decisão.',
+          sortedPending.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {sortedPending.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={focusPending}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-amber-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-amber-300">{item.display_label}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{item.name}</h4>
+                  <p className="mt-2 text-sm text-slate-400">{item.subject_summary}</p>
+                  <p className="mt-3 text-xs font-medium text-slate-500">Confirmado em {formatDateTime(item.contact_confirmed_at)}</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhuma pendência disponível neste momento.
+            </div>
+          ),
+        )
+      case 'days':
+        return shell(
+          'Dias liberados na agenda',
+          'Ao clicar em um dia, a área de gestão da agenda abre já posicionada nesse bloco para edição.',
+          sortedDays.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {sortedDays.map((day) => (
+                <button
+                  key={day.id}
+                  type="button"
+                  onClick={() => openAvailabilityDetail(day.id)}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-cyan-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-300">{day.weekday_label}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{day.display_label}</h4>
+                  <p className="mt-2 text-sm text-slate-400">{day.slots.length} horário(s) visível(is) neste dia.</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhum dia ativo disponível.
+            </div>
+          ),
+        )
+      case 'slots':
+        return shell(
+          'Horários ativos',
+          'Ao clicar em um horário, a agenda abre diretamente no dia correspondente para ajuste fino.',
+          activeSlots.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {activeSlots.map((slot) => (
+                <button
+                  key={slot.slotId}
+                  type="button"
+                  onClick={() => openAvailabilityDetail(slot.dayId)}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-indigo-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-indigo-300">{slot.timeLabel}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{slot.displayLabel}</h4>
+                  <p className="mt-2 text-sm text-slate-400">Clique para abrir o dia e ajustar esse horário.</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhum horário ativo disponível.
+            </div>
+          ),
+        )
+      case 'transcripts':
+        return shell(
+          'Reuniões com transcrição',
+          'Ao clicar em um item, você abre o detalhe do evento no histórico administrativo.',
+          transcriptItems.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {transcriptItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={`/admin/historico/${item.id}`}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-emerald-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-emerald-300">{item.display_label}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{item.name}</h4>
+                  <p className="mt-2 text-sm text-slate-400">{item.transcript_summary || 'Transcrição disponível para consulta.'}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhuma reunião com transcrição disponível.
+            </div>
+          ),
+        )
+      case 'completed':
+        return shell(
+          'Reuniões concluídas',
+          'Ao clicar em um item, você abre o detalhe completo do evento concluído.',
+          completedItems.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {completedItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={`/admin/historico/${item.id}`}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-fuchsia-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-fuchsia-300">{item.display_label}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{item.name}</h4>
+                  <p className="mt-2 text-sm text-slate-400">{item.subject_summary}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhuma reunião concluída registrada.
+            </div>
+          ),
+        )
+      case 'cancelled':
+        return shell(
+          'Reuniões canceladas',
+          'Ao clicar em um item, você abre o detalhe do cancelamento e dos dados vinculados.',
+          cancelledItems.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {cancelledItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={`/admin/historico/${item.id}`}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-rose-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-rose-300">{item.display_label}</p>
+                  <h4 className="mt-2 text-base font-semibold text-white">{item.name}</h4>
+                  <p className="mt-2 text-sm text-slate-400">{item.cancellation_reason || 'Cancelamento administrativo registrado.'}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhuma reunião cancelada registrada.
+            </div>
+          ),
+        )
+      case 'clients':
+        return shell(
+          'Clientes com acesso ativo',
+          'Ao clicar em um item, o painel abre o portal do cliente já focado no workspace correspondente.',
+          activeClientItems.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {activeClientItems.map((item) => (
+                <button
+                  key={item.workspace_id}
+                  type="button"
+                  onClick={() => openClientWorkspaceDetail(item.workspace_id)}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-left transition hover:border-teal-300/35 hover:bg-white/8"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-teal-300">{item.primary_contact_name}</p>
+                  <h4 className="mt-2 break-all text-base font-semibold text-white">{item.primary_contact_email}</h4>
+                  <p className="mt-2 text-sm text-slate-400">Último acesso em {formatDateTime(item.account?.last_login_at ?? item.activated_at)}</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              Nenhum cliente com acesso ativo neste momento.
+            </div>
+          ),
+        )
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="space-y-6 lg:space-y-7">
@@ -299,41 +608,104 @@ export default function AdminAvailabilityManager({
           </div>
         ) : null}
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] xl:items-start">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            {metrics.map((metric) => (
-              <article key={metric.label} className={`rounded-[1.3rem] border p-4 ${metric.accent}`}>
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{metric.label}</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{metric.value}</p>
-              </article>
-            ))}
-          </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <section className="rounded-[1.5rem] border border-white/10 bg-white/5 shadow-[0_14px_40px_rgba(2,6,23,0.2)]">
+            <button
+              type="button"
+              onClick={handleToggleOverview}
+              className="flex w-full items-start justify-between gap-4 rounded-[1.5rem] p-4 text-left transition hover:bg-white/5 sm:p-5"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Visão geral</p>
+                <h2 className="mt-3 text-xl font-semibold text-white">Indicadores rápidos da agenda</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  No mobile, os cards agora aproveitam melhor o espaço e cada indicador pode abrir sua própria lista de conteúdo.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-3">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  {overviewOpen ? 'Aberto' : 'Fechado'}
+                </span>
+                <span className="text-lg text-slate-300">{overviewOpen ? '−' : '+'}</span>
+              </div>
+            </button>
 
-          <form onSubmit={createDayHandler} className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 lg:p-5">
-            <label htmlFor="admin-day-date" className="mb-2 block text-sm font-medium text-slate-200">
-              Liberar ou atualizar dia
-            </label>
-            <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-              <input
-                id="admin-day-date"
-                type="date"
-                min={minDate}
-                max={maxDate}
-                value={dayDate}
-                onChange={(event) => setDayDate(event.target.value)}
-                required
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
-              />
+            {overviewOpen ? (
+              <div className="border-t border-white/10 px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-3 2xl:grid-cols-4">
+                  {metrics.map((metric) => {
+                    const isActive = selectedMetric === metric.key
+                    return (
+                      <button
+                        key={metric.key}
+                        type="button"
+                        onClick={() => handleMetricClick(metric.key)}
+                        className={`rounded-[1.3rem] border p-4 text-left transition hover:scale-[1.01] ${metric.accent} ${isActive ? 'ring-2 ring-white/20' : ''}`}
+                      >
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{metric.label}</p>
+                        <p className="mt-3 text-3xl font-semibold text-white">{metric.value}</p>
+                        <p className="mt-2 text-xs font-medium text-slate-200/80">{metric.hint}</p>
+                      </button>
+                    )
+                  })}
+                </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !dayDate}
-                className="w-full rounded-full bg-cyan-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-cyan-400/50 md:w-auto"
-              >
-                {submitting ? 'Salvando...' : 'Salvar dia'}
-              </button>
-            </div>
-          </form>
+                {selectedMetric !== null ? <div className="mt-4">{renderMetricContent()}</div> : null}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="rounded-[1.5rem] border border-white/10 bg-white/5 shadow-[0_14px_40px_rgba(2,6,23,0.2)]">
+            <button
+              type="button"
+              onClick={handleToggleScheduleControl}
+              className="flex w-full items-start justify-between gap-4 rounded-[1.5rem] p-4 text-left transition hover:bg-white/5 sm:p-5"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Gestão da agenda</p>
+                <h2 className="mt-3 text-xl font-semibold text-white">Liberar ou atualizar agenda</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Este controle agora fica em um card próprio, separado da visão geral do painel.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-3">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  {scheduleControlOpen ? 'Aberto' : 'Fechado'}
+                </span>
+                <span className="text-lg text-slate-300">{scheduleControlOpen ? '−' : '+'}</span>
+              </div>
+            </button>
+
+            {scheduleControlOpen ? (
+              <div className="border-t border-white/10 px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
+                <form onSubmit={createDayHandler} className="rounded-[1.4rem] border border-white/10 bg-slate-950/70 p-4 lg:p-5">
+                  <label htmlFor="admin-day-date" className="mb-2 block text-sm font-medium text-slate-200">
+                    Selecione o dia que deseja liberar ou atualizar
+                  </label>
+                  <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+                    <input
+                      id="admin-day-date"
+                      type="date"
+                      min={minDate}
+                      max={maxDate}
+                      value={dayDate}
+                      onChange={(event) => setDayDate(event.target.value)}
+                      required
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={submitting || !dayDate}
+                      className="w-full rounded-full bg-cyan-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-cyan-400/50 md:w-auto"
+                    >
+                      {submitting ? 'Salvando...' : 'Salvar dia'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : null}
+          </section>
         </div>
       </section>
 
@@ -363,6 +735,7 @@ export default function AdminAvailabilityManager({
           isFocused={focusedSection === 'availability'}
           onRequestFocus={focusAvailability}
           onClearFocus={clearFocus}
+          highlightDayId={highlightDayId}
           days={days}
           loadingDays={loadingDays}
           submitting={submitting}
@@ -446,6 +819,7 @@ export default function AdminAvailabilityManager({
           syncingDriveWorkspaceId={syncingDriveWorkspaceId}
           syncingGoogleWorkspaceId={syncingGoogleWorkspaceId}
           lastGoogleSyncByWorkspace={lastGoogleSyncByWorkspace}
+          highlightWorkspaceId={highlightWorkspaceId}
           onGenerateInvite={onGenerateWorkspaceInvite}
           onSyncWorkspaceDrive={onSyncWorkspaceDrive}
           onSyncPendingGoogleArtifacts={onSyncPendingGoogleArtifacts}

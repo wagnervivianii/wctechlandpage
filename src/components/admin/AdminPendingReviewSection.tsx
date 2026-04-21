@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type {
   AdminBookingApprovalPayload,
@@ -38,6 +38,12 @@ export default function AdminPendingReviewSection({
     () => [...items].sort((left, right) => right.contact_confirmed_at.localeCompare(left.contact_confirmed_at)),
     [items],
   )
+
+  useEffect(() => {
+    if (isFocused) {
+      setIsOpen(true)
+    }
+  }, [isFocused])
 
   function handleToggleSection() {
     setIsOpen((current) => {

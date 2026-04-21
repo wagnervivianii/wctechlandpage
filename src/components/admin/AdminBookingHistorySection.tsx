@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { AdminBookingHistoryItem } from '../../types/admin'
 import {
@@ -222,6 +222,12 @@ export default function AdminBookingHistorySection({
   const transcriptCount = history.filter((item) => item.has_transcript).length
   const completedCount = history.filter((item) => item.meeting_status === 'completed').length
   const cancelledCount = history.filter((item) => item.status === 'cancelled_by_admin').length
+
+  useEffect(() => {
+    if (isFocused) {
+      setIsOpen(true)
+    }
+  }, [isFocused])
 
   function toggleMaster() {
     setIsOpen((current) => {

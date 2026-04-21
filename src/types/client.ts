@@ -36,6 +36,21 @@ export type ClientMeResponse = {
   last_login_at: string | null
 }
 
+export type ClientPortalMeetingArtifactItem = {
+  id: number
+  artifact_type: string
+  artifact_status: string
+  artifact_label: string | null
+  source_provider: string | null
+  drive_file_name: string | null
+  drive_web_view_link: string | null
+  mime_type: string | null
+  file_size_bytes: number | null
+  text_content: string | null
+  summary_text: string | null
+  captured_at: string | null
+}
+
 export type ClientPortalMeetingItem = {
   id: number
   booking_request_id: number
@@ -49,6 +64,7 @@ export type ClientPortalMeetingItem = {
   meeting_started_at: string | null
   meeting_ended_at: string | null
   synced_from_booking_at: string | null
+  artifacts: ClientPortalMeetingArtifactItem[]
 }
 
 export type ClientPortalWorkspaceResponse = {

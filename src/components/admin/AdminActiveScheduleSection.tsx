@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import type { AdminAvailabilityDayItem } from "../../types/admin"
 import type { BookingViewMode, CalendarMonth } from "../../types/booking"
@@ -20,6 +20,7 @@ type AdminActiveScheduleSectionProps = {
   isFocused?: boolean
   onRequestFocus?: () => void
   onClearFocus?: () => void
+  highlightDayId?: number | null
   days: AdminAvailabilityDayItem[]
   loadingDays: boolean
   submitting: boolean
@@ -151,6 +152,7 @@ export default function AdminActiveScheduleSection({
   isFocused = false,
   onRequestFocus,
   onClearFocus,
+  highlightDayId = null,
   days,
   loadingDays,
   submitting,
@@ -180,6 +182,22 @@ export default function AdminActiveScheduleSection({
   const headers = getBookingCalendarHeaders()
   const dayByDate = useMemo(() => new Map(sortedDays.map((day) => [day.date, day])), [sortedDays])
   const selectedCalendarDay = selectedCalendarDate ? dayByDate.get(selectedCalendarDate) ?? null : null
+
+  useEffect(() => {
+    if (isFocused) {
+      setIsOpen(true)
+    }
+  }, [isFocused])
+
+  useEffect(() => {
+    if (highlightDayId === null) {
+      return
+    }
+    setIsOpen(true)
+    setViewMode('day')
+    setSelectedCalendarDate('')
+    setOpenDayId(highlightDayId)
+  }, [highlightDayId])
 
   function handleToggleDayOpen(dayId: number) {
     setOpenDayId((current) => (current === dayId ? null : dayId))
