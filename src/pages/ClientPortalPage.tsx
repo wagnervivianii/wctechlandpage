@@ -35,9 +35,29 @@ function getWorkspaceStatusLabel(value: string) {
       return 'Convite enviado'
     case 'provisioned':
       return 'Área provisionada'
+    case 'suspended':
+      return 'Acesso suspenso'
+    case 'archived':
+      return 'Área arquivada'
     default:
       return value
   }
+}
+
+function isClientAccessBlockedError(error: unknown) {
+  return error instanceof ClientApiError && error.status === 403
+}
+
+function isClientSessionExpiredError(error: unknown) {
+  return error instanceof ClientApiError && error.status === 401
+}
+
+function getClientBlockedMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+
+  return 'Seu acesso à área do cliente está indisponível no momento. Fale com a WV Tech Solutions para mais informações.'
 }
 
 function getArtifactTypeLabel(value: string) {
@@ -149,11 +169,23 @@ export default function ClientPortalPage() {
           setHasLoadedWorkspaceFiles(false)
         }
       } catch (err) {
-        if (err instanceof ClientApiError && err.status === 401) {
+        if (isClientSessionExpiredError(err)) {
           clearClientSession()
           window.location.replace(getClientLoginRoute())
           return
         }
+
+        if (isClientAccessBlockedError(err)) {
+          clearClientSession()
+          if (!isCancelled) {
+            setMe(null)
+            setWorkspace(null)
+            setWorkspaceFiles([])
+            setError(getClientBlockedMessage(err))
+          }
+          return
+        }
+
         if (!isCancelled) {
           setError(err instanceof Error ? err.message : 'Não foi possível carregar seu portal agora.')
         }
@@ -199,9 +231,18 @@ export default function ClientPortalPage() {
       setWorkspaceFiles(response.items)
       setHasLoadedWorkspaceFiles(true)
     } catch (err) {
-      if (err instanceof ClientApiError && err.status === 401) {
+      if (isClientSessionExpiredError(err)) {
         clearClientSession()
         window.location.replace(getClientLoginRoute())
+        return
+      }
+
+      if (isClientAccessBlockedError(err)) {
+        clearClientSession()
+        setMe(null)
+        setWorkspace(null)
+        setWorkspaceFiles([])
+        setError(getClientBlockedMessage(err))
         return
       }
 
@@ -277,7 +318,16 @@ export default function ClientPortalPage() {
 
           {error ? (
             <div className="rounded-[1.6rem] border border-rose-400/30 bg-rose-500/10 p-5 text-sm text-rose-100">
-              {error}
+              <p>{error}</p>
+              {!workspace && !loading ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="mt-4 rounded-full border border-rose-200/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-50 transition hover:bg-rose-400/10"
+                >
+                  Voltar ao login
+                </button>
+              ) : null}
             </div>
           ) : null}
 
