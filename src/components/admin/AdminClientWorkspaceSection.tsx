@@ -4,6 +4,7 @@ import AdminWorkspaceFilesPanel from './AdminWorkspaceFilesPanel'
 import type {
   AdminClientWorkspaceFileActionPayload,
   AdminClientWorkspaceFileListResponse,
+  AdminClientWorkspaceLifecyclePayload,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceMeetingArtifactItem,
   AdminClientWorkspaceMeetingItem,
@@ -27,6 +28,7 @@ type AdminClientWorkspaceSectionProps = {
   loadingWorkspaceFilesByWorkspace?: Record<number, boolean>
   uploadingWorkspaceFileId?: number | null
   processingWorkspaceFileActionKey?: string | null
+  processingWorkspaceLifecycleKey?: string | null
   onGenerateInvite?: (workspaceId: number, inviteTtlHours?: number) => Promise<void>
   onSyncWorkspaceDrive?: (workspaceId: number) => Promise<void>
   onSyncPendingGoogleArtifacts?: (workspaceId: number, forceResync?: boolean) => Promise<AdminClientWorkspaceMeetingArtifactBatchSyncResponse | void>
@@ -47,6 +49,9 @@ type AdminClientWorkspaceSectionProps = {
   onRejectWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
   onArchiveWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
   onDeleteWorkspaceFile?: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onSuspendWorkspace?: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
+  onArchiveWorkspace?: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
+  onReactivateWorkspace?: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
 }
 
 type WorkspacePanelKey = 'access' | 'drive' | 'meetings' | 'artifacts' | 'files' | 'closure'
@@ -66,6 +71,10 @@ function getWorkspaceStatusLabel(status: string) {
       return 'Convite enviado'
     case 'provisioned':
       return 'Área provisionada'
+    case 'suspended':
+      return 'Área suspensa'
+    case 'archived':
+      return 'Área arquivada'
     default:
       return status
   }
@@ -77,6 +86,10 @@ function getWorkspaceStatusClasses(status: string) {
       return 'bg-emerald-500/12 text-emerald-100 ring-1 ring-emerald-300/25'
     case 'invited':
       return 'bg-cyan-400/12 text-cyan-100 ring-1 ring-cyan-300/25'
+    case 'suspended':
+      return 'bg-amber-500/12 text-amber-100 ring-1 ring-amber-300/25'
+    case 'archived':
+      return 'bg-rose-500/12 text-rose-100 ring-1 ring-rose-300/25'
     default:
       return 'bg-white/8 text-slate-300 ring-1 ring-white/10'
   }
@@ -184,6 +197,7 @@ export default function AdminClientWorkspaceSection({
   loadingWorkspaceFilesByWorkspace = {},
   uploadingWorkspaceFileId = null,
   processingWorkspaceFileActionKey = null,
+  processingWorkspaceLifecycleKey = null,
   onGenerateInvite,
   onSyncWorkspaceDrive,
   onSyncPendingGoogleArtifacts,
@@ -193,6 +207,9 @@ export default function AdminClientWorkspaceSection({
   onRejectWorkspaceFile,
   onArchiveWorkspaceFile,
   onDeleteWorkspaceFile,
+  onSuspendWorkspace,
+  onArchiveWorkspace,
+  onReactivateWorkspace,
 }: AdminClientWorkspaceSectionProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [openWorkspaceIds, setOpenWorkspaceIds] = useState<Record<number, boolean>>({})
@@ -421,7 +438,53 @@ export default function AdminClientWorkspaceSection({
 
                           {activePanel === 'closure' ? (
                             <div className="grid gap-4 lg:grid-cols-2">
-                              <div className="rounded-[1.2rem] border border-rose-400/25 bg-rose-500/10 p-4 text-sm text-slate-200"><p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-rose-100">Encerramento controlado</p><ul className="mt-3 space-y-3 leading-7"><li>1. Fazer backup por etapas dos materiais relevantes.</li><li>2. Esvaziar ou arquivar a estrutura do Drive para não consumir espaço desnecessário.</li><li>3. Encerrar o workspace sem apagar tudo de uma vez.</li></ul><button type="button" disabled className="mt-4 rounded-full border border-rose-300/25 px-4 py-2 text-sm font-medium text-rose-100 opacity-70">Iniciar encerramento do workspace • em breve</button></div>
+                              <div className="rounded-[1.2rem] border border-rose-400/25 bg-rose-500/10 p-4 text-sm text-slate-200">
+                                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-rose-100">Encerramento controlado</p>
+                                <ul className="mt-3 space-y-3 leading-7">
+                                  <li>1. Suspender bloqueia o acesso do cliente sem apagar histórico.</li>
+                                  <li>2. Arquivar encerra definitivamente o workspace e preserva dados administrativos.</li>
+                                  <li>3. Reativar só fica disponível para workspace suspenso.</li>
+                                </ul>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={!onSuspendWorkspace || item.workspace_status === 'suspended' || item.workspace_status === 'archived' || processingWorkspaceLifecycleKey === `suspend:${item.workspace_id}`}
+                                    onClick={() => {
+                                      const reason = window.prompt('Motivo para suspender este workspace:', 'Suspensão administrativa temporária.')
+                                      if (reason === null) return
+                                      void onSuspendWorkspace?.(item.workspace_id, { reason })
+                                    }}
+                                    className="rounded-full border border-amber-300/25 px-4 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {processingWorkspaceLifecycleKey === `suspend:${item.workspace_id}` ? 'Suspendendo...' : 'Suspender acesso'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={!onArchiveWorkspace || item.workspace_status === 'archived' || processingWorkspaceLifecycleKey === `archive:${item.workspace_id}`}
+                                    onClick={() => {
+                                      const reason = window.prompt('Motivo para arquivar este workspace:', 'Encerramento administrativo do workspace.')
+                                      if (reason === null) return
+                                      if (!window.confirm('Confirmar arquivamento? O cliente perderá acesso, mas o histórico será preservado.')) return
+                                      void onArchiveWorkspace?.(item.workspace_id, { reason })
+                                    }}
+                                    className="rounded-full border border-rose-300/25 px-4 py-2 text-sm font-medium text-rose-100 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {processingWorkspaceLifecycleKey === `archive:${item.workspace_id}` ? 'Arquivando...' : 'Arquivar workspace'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={!onReactivateWorkspace || item.workspace_status !== 'suspended' || processingWorkspaceLifecycleKey === `reactivate:${item.workspace_id}`}
+                                    onClick={() => {
+                                      const reason = window.prompt('Motivo para reativar este workspace:', 'Reativação administrativa do workspace.')
+                                      if (reason === null) return
+                                      void onReactivateWorkspace?.(item.workspace_id, { reason })
+                                    }}
+                                    className="rounded-full border border-emerald-300/25 px-4 py-2 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {processingWorkspaceLifecycleKey === `reactivate:${item.workspace_id}` ? 'Reativando...' : 'Reativar workspace'}
+                                  </button>
+                                </div>
+                              </div>
                               <div className="rounded-[1.2rem] border border-white/10 bg-slate-950/50 p-4 text-sm text-slate-200"><p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-400">Checklist antes de excluir</p><ul className="mt-3 space-y-3 leading-7 text-slate-300"><li>• Conferir se a reunião já foi concluída ou encerrada.</li><li>• Garantir que transcrições e documentos relevantes foram preservados.</li><li>• Confirmar a remoção do conteúdo do Google Drive e do servidor em blocos controlados.</li></ul></div>
                             </div>
                           ) : null}

@@ -60,11 +60,15 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
     loadingWorkspaceFilesByWorkspace,
     uploadingWorkspaceFileId,
     processingWorkspaceFileActionKey,
+    processingWorkspaceLifecycleKey,
     uploadWorkspaceFile,
     approveWorkspaceFile,
     rejectWorkspaceFile,
     archiveWorkspaceFile,
     deleteWorkspaceFile,
+    suspendWorkspace,
+    archiveWorkspace,
+    reactivateWorkspace,
   } = useAdminClientWorkspaces({
     token,
     enabled: isAuthenticated,
@@ -183,12 +187,16 @@ export default function AdminPage({ historyEventId = null }: AdminPageProps) {
               loadingWorkspaceFilesByWorkspace={loadingWorkspaceFilesByWorkspace}
               uploadingWorkspaceFileId={uploadingWorkspaceFileId}
               processingWorkspaceFileActionKey={processingWorkspaceFileActionKey}
+              processingWorkspaceLifecycleKey={processingWorkspaceLifecycleKey}
               onLoadWorkspaceFiles={loadWorkspaceFiles}
               onUploadWorkspaceFile={uploadWorkspaceFile}
               onApproveWorkspaceFile={approveWorkspaceFile}
               onRejectWorkspaceFile={rejectWorkspaceFile}
               onArchiveWorkspaceFile={archiveWorkspaceFile}
               onDeleteWorkspaceFile={deleteWorkspaceFile}
+              onSuspendWorkspace={suspendWorkspace}
+              onArchiveWorkspace={archiveWorkspace}
+              onReactivateWorkspace={reactivateWorkspace}
             />
           ) : null}
         </main>

@@ -88,6 +88,21 @@ export type AdminSlotUpsertPayload = {
   is_active: boolean
 }
 
+export type AdminClientWorkspaceLifecyclePayload = {
+  reason?: string | null
+}
+
+export type AdminClientWorkspaceLifecycleResponse = {
+  workspace_id: number
+  previous_status: string
+  workspace_status: string
+  client_access_revoked: boolean
+  pending_invites_revoked: number
+  visible_meetings_hidden: number
+  admin_history_preserved: boolean
+  message: string
+}
+
 export type AdminClientWorkspaceDriveFolderItem = {
   folder_id: string
   folder_name: string

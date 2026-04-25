@@ -7,6 +7,7 @@ import type {
   AdminBookingRejectionPayload,
   AdminClientWorkspaceFileActionPayload,
   AdminClientWorkspaceFileListResponse,
+  AdminClientWorkspaceLifecyclePayload,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceSummaryItem,
 } from '../../types/admin'
@@ -78,6 +79,7 @@ type AdminAvailabilityManagerProps = {
   loadingWorkspaceFilesByWorkspace: Record<number, boolean>
   uploadingWorkspaceFileId: number | null
   processingWorkspaceFileActionKey: string | null
+  processingWorkspaceLifecycleKey: string | null
   onLoadWorkspaceFiles: (workspaceId: number) => Promise<void>
   onUploadWorkspaceFile: (
     workspaceId: number,
@@ -95,6 +97,9 @@ type AdminAvailabilityManagerProps = {
   onRejectWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
   onArchiveWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
   onDeleteWorkspaceFile: (workspaceId: number, fileId: number, payload: AdminClientWorkspaceFileActionPayload) => Promise<unknown>
+  onSuspendWorkspace: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
+  onArchiveWorkspace: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
+  onReactivateWorkspace: (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) => Promise<unknown>
 }
 
 type AdminMetricCard = {
@@ -213,12 +218,16 @@ export default function AdminAvailabilityManager({
   loadingWorkspaceFilesByWorkspace,
   uploadingWorkspaceFileId,
   processingWorkspaceFileActionKey,
+  processingWorkspaceLifecycleKey,
   onLoadWorkspaceFiles,
   onUploadWorkspaceFile,
   onApproveWorkspaceFile,
   onRejectWorkspaceFile,
   onArchiveWorkspaceFile,
   onDeleteWorkspaceFile,
+  onSuspendWorkspace,
+  onArchiveWorkspace,
+  onReactivateWorkspace,
 }: AdminAvailabilityManagerProps) {
   const { minDate, maxDate } = useMemo(() => getWindowLimits(), [])
   const [dayDate, setDayDate] = useState(minDate)
@@ -860,12 +869,16 @@ export default function AdminAvailabilityManager({
           loadingWorkspaceFilesByWorkspace={loadingWorkspaceFilesByWorkspace}
           uploadingWorkspaceFileId={uploadingWorkspaceFileId}
           processingWorkspaceFileActionKey={processingWorkspaceFileActionKey}
+          processingWorkspaceLifecycleKey={processingWorkspaceLifecycleKey}
           onLoadWorkspaceFiles={onLoadWorkspaceFiles}
           onUploadWorkspaceFile={onUploadWorkspaceFile}
           onApproveWorkspaceFile={onApproveWorkspaceFile}
           onRejectWorkspaceFile={onRejectWorkspaceFile}
           onArchiveWorkspaceFile={onArchiveWorkspaceFile}
           onDeleteWorkspaceFile={onDeleteWorkspaceFile}
+          onSuspendWorkspace={onSuspendWorkspace}
+          onArchiveWorkspace={onArchiveWorkspace}
+          onReactivateWorkspace={onReactivateWorkspace}
         />
       ) : null}
     </div>

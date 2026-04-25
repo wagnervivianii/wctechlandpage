@@ -12,6 +12,8 @@ import type {
   AdminClientWorkspaceFileItem,
   AdminClientWorkspaceFileListResponse,
   AdminClientWorkspaceInviteRefreshPayload,
+  AdminClientWorkspaceLifecyclePayload,
+  AdminClientWorkspaceLifecycleResponse,
   AdminClientWorkspaceListResponse,
   AdminClientWorkspaceMeetingArtifactBatchSyncPayload,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
@@ -214,6 +216,45 @@ export class AdminApiClient {
     return parseResponse<AdminClientWorkspaceDriveSyncResponse>(
       response,
       'Não foi possível sincronizar a estrutura do Google Drive do cliente.',
+    )
+  }
+
+  async suspendClientWorkspace(token: string, workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/suspend`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceLifecycleResponse>(
+      response,
+      'Não foi possível suspender o workspace do cliente.',
+    )
+  }
+
+  async archiveClientWorkspace(token: string, workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/archive`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceLifecycleResponse>(
+      response,
+      'Não foi possível arquivar o workspace do cliente.',
+    )
+  }
+
+  async reactivateClientWorkspace(token: string, workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) {
+    const response = await fetch(`/api/admin/client-workspaces/${workspaceId}/reactivate`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token, true),
+      body: JSON.stringify(payload),
+    })
+
+    return parseResponse<AdminClientWorkspaceLifecycleResponse>(
+      response,
+      'Não foi possível reativar o workspace do cliente.',
     )
   }
 

@@ -4,6 +4,7 @@ import { AdminApiError, adminApiClient } from '../services/AdminApiClient'
 import type {
   AdminClientWorkspaceFileActionPayload,
   AdminClientWorkspaceFileListResponse,
+  AdminClientWorkspaceLifecyclePayload,
   AdminClientWorkspaceMeetingArtifactBatchSyncResponse,
   AdminClientWorkspaceSummaryItem,
 } from '../types/admin'
@@ -31,6 +32,7 @@ export function useAdminClientWorkspaces({
   const [loadingWorkspaceFilesByWorkspace, setLoadingWorkspaceFilesByWorkspace] = useState<Record<number, boolean>>({})
   const [uploadingWorkspaceFileId, setUploadingWorkspaceFileId] = useState<number | null>(null)
   const [processingWorkspaceFileActionKey, setProcessingWorkspaceFileActionKey] = useState<string | null>(null)
+  const [processingWorkspaceLifecycleKey, setProcessingWorkspaceLifecycleKey] = useState<string | null>(null)
 
   const handleApiError = useCallback((error: unknown, fallbackMessage: string) => {
     if (error instanceof AdminApiError && error.status === 401) {
@@ -142,6 +144,60 @@ export function useAdminClientWorkspaces({
       setSyncingGoogleWorkspaceId(null)
     }
   }, [enabled, handleApiError, loadWorkspaces, token])
+
+  const applyWorkspaceLifecycleAction = useCallback(async (
+    action: 'suspend' | 'archive' | 'reactivate',
+    workspaceId: number,
+    payload: AdminClientWorkspaceLifecyclePayload,
+  ) => {
+    if (!enabled || !token) {
+      return
+    }
+
+    const actionKey = `${action}:${workspaceId}`
+
+    try {
+      setProcessingWorkspaceLifecycleKey(actionKey)
+      setWorkspaceError('')
+
+      if (action === 'suspend') {
+        await adminApiClient.suspendClientWorkspace(token, workspaceId, payload)
+      }
+
+      if (action === 'archive') {
+        await adminApiClient.archiveClientWorkspace(token, workspaceId, payload)
+      }
+
+      if (action === 'reactivate') {
+        await adminApiClient.reactivateClientWorkspace(token, workspaceId, payload)
+      }
+
+      await loadWorkspaces()
+    } catch (error) {
+      handleApiError(error, 'Não foi possível atualizar o ciclo de vida do workspace.')
+      throw error
+    } finally {
+      setProcessingWorkspaceLifecycleKey(null)
+    }
+  }, [enabled, handleApiError, loadWorkspaces, token])
+
+  const suspendWorkspace = useCallback(
+    (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) =>
+      applyWorkspaceLifecycleAction('suspend', workspaceId, payload),
+    [applyWorkspaceLifecycleAction],
+  )
+
+  const archiveWorkspace = useCallback(
+    (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) =>
+      applyWorkspaceLifecycleAction('archive', workspaceId, payload),
+    [applyWorkspaceLifecycleAction],
+  )
+
+  const reactivateWorkspace = useCallback(
+    (workspaceId: number, payload: AdminClientWorkspaceLifecyclePayload) =>
+      applyWorkspaceLifecycleAction('reactivate', workspaceId, payload),
+    [applyWorkspaceLifecycleAction],
+  )
 
   const uploadWorkspaceFile = useCallback(async (
     workspaceId: number,
@@ -255,6 +311,7 @@ export function useAdminClientWorkspaces({
     loadingWorkspaceFilesByWorkspace,
     uploadingWorkspaceFileId,
     processingWorkspaceFileActionKey,
+    processingWorkspaceLifecycleKey,
     loadWorkspaces,
     loadWorkspaceFiles,
     generateWorkspaceInvite,
@@ -265,5 +322,8 @@ export function useAdminClientWorkspaces({
     rejectWorkspaceFile,
     archiveWorkspaceFile,
     deleteWorkspaceFile,
+    suspendWorkspace,
+    archiveWorkspace,
+    reactivateWorkspace,
   }
 }
