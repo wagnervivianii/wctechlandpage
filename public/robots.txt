@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cliente
+Disallow: /cliente/
+Disallow: /deploy/
+
+Sitemap: https://wvtechsolutions.com.br/sitemap.xml

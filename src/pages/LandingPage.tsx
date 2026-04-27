@@ -60,7 +60,7 @@ const securityPillars = [
 ]
 
 const navigation = [
-  { label: 'Sobre', section: 'sobre' as const },
+  { label: 'Soluções', href: '#solucoes' },
   { label: 'Segurança', section: 'seguranca' as const },
   { label: 'Contato', href: '#contato' },
 ]
@@ -98,6 +98,10 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
     toggleSection(section)
   }
 
+  const handleNavAnchorClick = () => {
+    closeMobileMenu()
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="hero-shell">
@@ -126,19 +130,19 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               </div>
             </a>
 
-            <nav className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-slate-200 lg:flex">
               {navigation.map((item) =>
                 'section' in item ? (
                   <button
                     key={item.label}
                     type="button"
                     onClick={() => handleNavSectionClick(item.section as 'sobre' | 'seguranca')}
-                    className="cursor-pointer transition hover:text-cyan-300"
+                    className="cursor-pointer text-slate-200 transition hover:text-cyan-300"
                   >
                     {item.label}
                   </button>
                 ) : (
-                  <a key={item.label} href={item.href} className="transition hover:text-cyan-300">
+                  <a key={item.label} href={item.href} className="text-slate-200 transition hover:text-cyan-300">
                     {item.label}
                   </a>
                 )
@@ -147,7 +151,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 <a
                   key={item.label}
                   href={item.href}
-                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/5"
+                  className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
                 >
                   {item.label}
                 </a>
@@ -167,13 +171,6 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               >
                 Agendar conversa
               </a>
-              <button
-                type="button"
-                onClick={() => toggleSection('sobre')}
-                className="rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Conhecer a visão
-              </button>
             </div>
 
             <button
@@ -223,14 +220,14 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   <a
                     key={item.label}
                     href={item.href}
-                    onClick={closeMobileMenu}
+                    onClick={handleNavAnchorClick}
                     className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10"
                   >
                     {item.label}
                   </a>
                 )
               )}
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <a
                   href="/agendar"
                   onClick={closeMobileMenu}
@@ -252,13 +249,6 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 >
                   Admin
                 </a>
-                <button
-                  type="button"
-                  onClick={() => handleNavSectionClick('sobre')}
-                  className="rounded-full bg-cyan-400 px-5 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-                >
-                  Conhecer a visão
-                </button>
               </div>
             </nav>
           </div>
@@ -280,9 +270,10 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               </h1>
 
               <p className="mt-6 max-w-3xl text-pretty text-base leading-8 text-slate-300 sm:text-lg">
-                A WV Tech Solutions conecta automação, dados e produto para transformar
-                operação em escala, clareza e decisão. Não é só tecnologia. É percepção
-                aplicada ao que faz o negócio girar.
+                A WV Tech Solutions conecta automação, dados, inteligência operacional e
+                ciência de dados aplicada ao Trade Marketing para transformar operação em
+                escala, clareza e decisão. Não é só tecnologia. É percepção aplicada ao que
+                faz o negócio girar.
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
@@ -304,7 +295,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   onClick={() => toggleSection('sobre')}
                   className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-300/30 hover:bg-white/10 sm:w-auto"
                 >
-                  Conhecer o diferencial
+                  Conhecer a visão estratégica
                 </button>
               </div>
             </div>
@@ -379,7 +370,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             </div>
           </section>
 
-          <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
+          <section id="solucoes" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
             <div className="grid gap-6 lg:grid-cols-3">
               <article className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-300">
@@ -538,7 +529,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   </div>
 
                   <p className="mt-6 max-w-4xl text-sm leading-8 text-slate-300 sm:text-base">
-                    Na WV Techsolutions, a segurança da informação não é uma etapa posterior ao
+                    Na WV Tech Solutions, a segurança da informação não é uma etapa posterior ao
                     desenvolvimento; ela é{' '}
                     <strong className="font-semibold text-slate-100">
                       parte integrante e nativa de cada linha de código
@@ -583,7 +574,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                       </p>
                       <div className="mt-4 space-y-4 text-sm leading-8 text-slate-300 sm:text-base">
                         <p>
-                          Todo projeto da WV Techsolutions é regido por{' '}
+                          Todo projeto da WV Tech Solutions é regido por{' '}
                           <strong className="font-semibold text-slate-100">contrato formal</strong>,
                           que define com clareza os papéis de Controlador e Operador de dados,
                           responsabilidades contratuais e regras de acesso, prevenção e sigilo.
