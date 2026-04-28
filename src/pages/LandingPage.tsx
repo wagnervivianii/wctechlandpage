@@ -59,15 +59,20 @@ const securityPillars = [
   },
 ]
 
-const navigation = [
+type ExpandableSection = 'sobre' | 'seguranca' | null
+type NavigableSection = Exclude<ExpandableSection, null>
+type NavigationItem =
+  | { label: string; href: string }
+  | { label: string; section: NavigableSection }
+
+const navigation: NavigationItem[] = [
   { label: 'Soluções', href: '#solucoes' },
-  { label: 'Segurança', section: 'seguranca' as const },
+  { label: 'Sobre', section: 'sobre' },
+  { label: 'Segurança', section: 'seguranca' },
   { label: 'Contato', href: '#contato' },
 ]
 
 const quickAccessLinks = [{ label: 'Admin', href: '/admin' }]
-
-type ExpandableSection = 'sobre' | 'seguranca' | null
 
 type LandingPageProps = {
   mobileMenuOpen: boolean
@@ -79,7 +84,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const toggleSection = (section: Exclude<ExpandableSection, null>) => {
+  const toggleSection = (section: NavigableSection) => {
     setActiveSection((current) => {
       const next = current === section ? null : section
 
@@ -93,7 +98,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
     })
   }
 
-  const handleNavSectionClick = (section: Exclude<ExpandableSection, null>) => {
+  const handleNavSectionClick = (section: NavigableSection) => {
     closeMobileMenu()
     toggleSection(section)
   }
@@ -130,19 +135,23 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               </div>
             </a>
 
-            <nav className="hidden items-center gap-6 text-sm font-medium text-slate-200 lg:flex">
+            <nav className="hidden items-center gap-2 text-sm font-medium text-slate-200 lg:flex">
               {navigation.map((item) =>
                 'section' in item ? (
                   <button
                     key={item.label}
                     type="button"
-                    onClick={() => handleNavSectionClick(item.section as 'sobre' | 'seguranca')}
-                    className="cursor-pointer text-slate-200 transition hover:text-cyan-300"
+                    onClick={() => handleNavSectionClick(item.section)}
+                    className="cursor-pointer rounded-full px-3 py-2 text-slate-200 transition hover:bg-white/5 hover:text-cyan-300"
                   >
                     {item.label}
                   </button>
                 ) : (
-                  <a key={item.label} href={item.href} className="text-slate-200 transition hover:text-cyan-300">
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="rounded-full px-3 py-2 text-slate-200 transition hover:bg-white/5 hover:text-cyan-300"
+                  >
                     {item.label}
                   </a>
                 )
@@ -211,7 +220,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   <button
                     key={item.label}
                     type="button"
-                    onClick={() => handleNavSectionClick(item.section as 'sobre' | 'seguranca')}
+                    onClick={() => handleNavSectionClick(item.section)}
                     className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10"
                   >
                     {item.label}
@@ -289,13 +298,6 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
                 >
                   Segurança e governança
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleSection('sobre')}
-                  className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-300/30 hover:bg-white/10 sm:w-auto"
-                >
-                  Conhecer a visão estratégica
                 </button>
               </div>
             </div>
@@ -425,9 +427,9 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
 
           {activeSection === 'sobre' ? (
             <section id="sobre" className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
-              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
+              <div className="overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
                 <div className="grid gap-10 px-6 py-8 sm:px-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-center lg:px-10 lg:py-10">
-                  <div className="mx-auto flex w-full max-w-[280px] justify-center lg:max-w-none">
+                  <div className="mx-auto flex w-full max-w-70 justify-center lg:max-w-none">
                     <div className="relative h-64 w-64 overflow-hidden rounded-full border border-cyan-300/20 bg-slate-900 shadow-[0_0_40px_rgba(34,211,238,0.14)] sm:h-72 sm:w-72">
                       <img
                         src="/imagens/sobre.jpg"
@@ -508,7 +510,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
               id="seguranca"
               className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20"
             >
-              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
+              <div className="overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur">
                 <div className="px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
