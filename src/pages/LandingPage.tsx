@@ -3,18 +3,18 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 const services = [
   {
     index: '01',
-    title: 'Automação de processos',
-    description: 'Fluxos mais rápidos, menos retrabalho e operação mais previsível.',
+    title: 'Software para Trade Marketing',
+    description: 'Sistemas sob medida para transformar campo, dados e gestão em operação mais previsível.',
   },
   {
     index: '02',
-    title: 'Dados e integração',
+    title: 'Dados e integração de APIs',
     description: 'Conecte fontes, organize informações e destrave visão real do negócio.',
   },
   {
     index: '03',
-    title: 'BI e inteligência operacional',
-    description: 'Dashboards, indicadores e leitura acionável para decidir com clareza.',
+    title: 'BI para operação de campo',
+    description: 'Dashboards, indicadores e leitura acionável para Trade Marketing, varejo e gestão de campo.',
   },
   {
     index: '04',
@@ -72,8 +72,6 @@ const navigation: NavigationItem[] = [
   { label: 'Contato', href: '#contato' },
 ]
 
-const quickAccessLinks = [{ label: 'Admin', href: '/admin' }]
-
 type LandingPageProps = {
   mobileMenuOpen: boolean
   setMobileMenuOpen: Dispatch<SetStateAction<boolean>>
@@ -130,7 +128,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   WV Tech Solutions
                 </p>
                 <p className="hidden truncate text-sm text-slate-400 sm:block">
-                  Dados, automação e percepção de negócio
+                  Tecnologia em Trade Marketing
                 </p>
               </div>
             </a>
@@ -156,15 +154,6 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   </a>
                 )
               )}
-              {quickAccessLinks.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
-                >
-                  {item.label}
-                </a>
-              ))}
             </nav>
 
             <div className="hidden items-center gap-3 md:flex">
@@ -236,7 +225,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   </a>
                 )
               )}
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <a
                   href="/agendar"
                   onClick={closeMobileMenu}
@@ -251,13 +240,6 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 >
                   Área do cliente
                 </a>
-                <a
-                  href="/admin"
-                  onClick={closeMobileMenu}
-                  className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-white/5"
-                >
-                  Admin
-                </a>
               </div>
             </nav>
           </div>
@@ -268,21 +250,20 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/8 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.34em] text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.14)] sm:text-[0.72rem]">
                 <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
-                Estratégia, dados e execução
+                Trade Marketing, dados e automação
               </div>
 
               <h1 className="mt-7 max-w-5xl text-balance text-center text-4xl font-semibold leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
-                Soluções digitais com{' '}
+                Software, dados e automação para{' '}
                 <span className="bg-linear-to-r from-cyan-300 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
-                  leitura real do negócio.
+                  Trade Marketing.
                 </span>
               </h1>
 
               <p className="mt-6 max-w-3xl text-pretty text-base leading-8 text-slate-300 sm:text-lg">
-                A WV Tech Solutions conecta automação, dados, inteligência operacional e
-                ciência de dados aplicada ao Trade Marketing para transformar operação em
-                escala, clareza e decisão. Não é só tecnologia. É percepção aplicada ao que
-                faz o negócio girar.
+                A WV Tech Solutions cria softwares, automações, integrações, dashboards e
+                soluções de ciência de dados para Trade Marketing, varejo e operações de campo.
+                Menos retrabalho, mais leitura operacional e decisões com base em dados reais.
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
@@ -382,8 +363,8 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   Processos que param de depender de esforço manual.
                 </h3>
                 <p className="mt-4 leading-7 text-slate-300">
-                  Mapeamos gargalos, desenhamos fluxo e colocamos a operação para rodar com
-                  mais consistência e menos intervenção.
+                  Mapeamos gargalos, desenhamos fluxos e desenvolvemos software para reduzir
+                  tarefas repetitivas em operações de Trade Marketing.
                 </p>
               </article>
               <article className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6">
@@ -394,7 +375,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   Dados conectados do jeito certo.
                 </h3>
                 <p className="mt-4 leading-7 text-slate-300">
-                  Estruturamos pipelines, APIs e fluxos com base em uma stack
+                  Estruturamos pipelines, APIs e integrações com base em uma stack
                   <strong className="font-semibold text-slate-100"> open source</strong> para
                   reduzir dependência de terceiros, baixar custo de licenciamento e ampliar a
                   autonomia do cliente.
@@ -418,8 +399,8 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   Inteligência aplicada ao negócio.
                 </h3>
                 <p className="mt-4 leading-7 text-slate-300">
-                  Nossa entrega não para no código: ela ajuda a enxergar melhor, decidir mais
-                  rápido e executar com segurança.
+                  Nossa entrega combina BI, ciência de dados e leitura operacional para enxergar
+                  ruptura, estoque, execução de campo e oportunidades de melhoria.
                 </p>
               </article>
             </div>
@@ -446,7 +427,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                           Sobre
                         </p>
                         <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
-                          Visão estratégica de operação, dados e tecnologia no mesmo lugar.
+                          Sobre a WV Tech Solutions.
                         </h2>
                       </div>
                       <button
@@ -460,43 +441,20 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
 
                     <div className="mt-6 space-y-5 text-sm leading-8 text-slate-300 sm:text-base">
                       <p>
-                        Após décadas atuando em agências de Trade Marketing e mergulhando no mundo
-                        da tecnologia, desenvolvi uma visão que{' '}
-                        <strong className="font-semibold text-slate-100">
-                          une o campo estratégico aos bastidores da programação
-                        </strong>
-                        . Minha trajetória de mais de 20 anos foi pavimentada “escovando bytes” e
-                        observando o modus operandi de grandes operações, o que me permitiu formar
-                        uma leitura analítica e crítica que vai além do horizonte comum.
+                        A WV Tech Solutions nasceu da união entre vivência real em Trade Marketing,
+                        dados e desenvolvimento de software. A proposta é simples: entender a
+                        operação antes de escrever código.
                       </p>
 
                       <p>
-                        Percebi que a grande falha das agências não está na falta de dados, mas no{' '}
-                        <strong className="font-semibold text-slate-100">fluxo lógico</strong>.
-                        Identifiquei um padrão ineficiente: profissionais sobrecarregados
-                        manipulando planilhas e extraindo dados manualmente para alimentar sistemas.
-                        <strong className="font-semibold text-slate-100">
-                          {' '}Esse ciclo deixou de ser eficaz há muito tempo.
-                        </strong>
+                        Criamos soluções sob medida para reduzir retrabalho, conectar sistemas,
+                        automatizar rotinas e transformar dados operacionais em inteligência para
+                        decisão.
                       </p>
 
                       <p>
-                        Decidi mudar o jogo através do{' '}
-                        <strong className="font-semibold text-slate-100">Open Source</strong>.
-                        Desenvolvo softwares que eliminam dependência desnecessária de ferramentas
-                        de terceiros, reduzem custos de licenciamento e otimizam o tempo da
-                        operação dentro do próprio ecossistema do cliente.
-                      </p>
-
-                      <p>
-                        Seja no Trade Marketing, em sistemas de gestão de estoque ou em agendas
-                        inteligentes, minha filosofia é clara:
-                        <strong className="font-semibold text-slate-100">
-                          {' '}nem todo problema é tecnológico; muitas vezes, o problema é o
-                          processo.
-                        </strong>{' '}
-                        Meu papel é enxergar os gargalos que o próprio dono do negócio ainda não
-                        percebeu.
+                        O foco está em tecnologia útil: software, BI, automação e ciência de dados
+                        aplicados ao que realmente move a operação do cliente.
                       </p>
                     </div>
                   </div>
