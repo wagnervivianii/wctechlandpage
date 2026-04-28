@@ -219,14 +219,29 @@ export default function AdminClientWorkspaceSection({
   const sortedItems = useMemo(() => [...items].sort((left, right) => right.created_at.localeCompare(left.created_at)), [items])
 
   useEffect(() => {
-    if (isFocused) setIsOpen(true)
+    if (!isFocused) {
+      return undefined
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [isFocused])
 
   useEffect(() => {
-    if (highlightWorkspaceId === null) return
-    setIsOpen(true)
-    setOpenWorkspaceIds((current) => ({ ...current, [highlightWorkspaceId]: true }))
-    setWorkspacePanels((current) => ({ ...current, [highlightWorkspaceId]: 'meetings' }))
+    if (highlightWorkspaceId === null) {
+      return undefined
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+      setOpenWorkspaceIds((current) => ({ ...current, [highlightWorkspaceId]: true }))
+      setWorkspacePanels((current) => ({ ...current, [highlightWorkspaceId]: 'meetings' }))
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [highlightWorkspaceId])
 
   function handleToggleSection() {

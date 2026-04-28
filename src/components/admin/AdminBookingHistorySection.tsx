@@ -224,9 +224,15 @@ export default function AdminBookingHistorySection({
   const cancelledCount = history.filter((item) => item.status === 'cancelled_by_admin').length
 
   useEffect(() => {
-    if (isFocused) {
-      setIsOpen(true)
+    if (!isFocused) {
+      return undefined
     }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [isFocused])
 
   function toggleMaster() {

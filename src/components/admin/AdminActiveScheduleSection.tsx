@@ -184,19 +184,30 @@ export default function AdminActiveScheduleSection({
   const selectedCalendarDay = selectedCalendarDate ? dayByDate.get(selectedCalendarDate) ?? null : null
 
   useEffect(() => {
-    if (isFocused) {
-      setIsOpen(true)
+    if (!isFocused) {
+      return undefined
     }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [isFocused])
 
   useEffect(() => {
     if (highlightDayId === null) {
-      return
+      return undefined
     }
-    setIsOpen(true)
-    setViewMode('day')
-    setSelectedCalendarDate('')
-    setOpenDayId(highlightDayId)
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+      setViewMode('day')
+      setSelectedCalendarDate('')
+      setOpenDayId(highlightDayId)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [highlightDayId])
 
   function handleToggleDayOpen(dayId: number) {

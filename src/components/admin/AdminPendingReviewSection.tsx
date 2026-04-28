@@ -40,9 +40,15 @@ export default function AdminPendingReviewSection({
   )
 
   useEffect(() => {
-    if (isFocused) {
-      setIsOpen(true)
+    if (!isFocused) {
+      return undefined
     }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsOpen(true)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [isFocused])
 
   function handleToggleSection() {

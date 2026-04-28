@@ -203,7 +203,7 @@ export default function ClientPortalPage() {
     }
   }, [])
 
-  const meetings = workspace?.meetings ?? []
+  const meetings = useMemo(() => workspace?.meetings ?? [], [workspace?.meetings])
   const totalArtifacts = useMemo(
     () => meetings.reduce((total, meeting) => total + meeting.artifacts.length, 0),
     [meetings],
