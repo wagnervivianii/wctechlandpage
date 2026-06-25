@@ -67,6 +67,7 @@ type NavigationItem =
 
 const navigation: NavigationItem[] = [
   { label: 'Soluções', href: '#solucoes' },
+  { label: 'Proposta', href: '/proposta' },
   { label: 'Sobre', section: 'sobre' },
   { label: 'Segurança', section: 'seguranca' },
   { label: 'Contato', href: '#contato' },
@@ -273,10 +274,16 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                 >
                   Agendar diagnóstico
                 </a>
+                <a
+                  href="/proposta"
+                  className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
+                >
+                  Ver proposta Trade Hub
+                </a>
                 <button
                   type="button"
                   onClick={() => toggleSection('seguranca')}
-                  className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
+                  className="w-full rounded-full border border-white/12 bg-white/5 px-6 py-3.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-300/30 hover:bg-white/10 sm:w-auto"
                 >
                   Segurança e governança
                 </button>

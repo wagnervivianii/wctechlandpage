@@ -10,9 +10,24 @@ import AdminPage from './pages/AdminPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage.tsx'
 import BookingPage from './pages/BookingPage'
 import LandingPage from './pages/LandingPage'
+import ProposalPage from './pages/ProposalPage'
+import WagnerLinksPage from './pages/WagnerLinksPage'
 
 function isSchedulePath(pathname: string) {
   return pathname === '/agendar' || pathname === '/agendar/'
+}
+
+function isProposalPath(pathname: string) {
+  return pathname === '/proposta' || pathname === '/proposta/'
+}
+
+function isWagnerLinksPath(pathname: string) {
+  return (
+    pathname === '/wagner' ||
+    pathname === '/wagner/' ||
+    pathname === '/links' ||
+    pathname === '/links/'
+  )
 }
 
 function isBookingConfirmationPath(pathname: string) {
@@ -72,6 +87,14 @@ export default function App() {
 
   if (isSchedulePath(pathname)) {
     return <BookingPage />
+  }
+
+  if (isProposalPath(pathname)) {
+    return <ProposalPage />
+  }
+
+  if (isWagnerLinksPath(pathname)) {
+    return <WagnerLinksPage />
   }
 
   if (isBookingConfirmationPath(pathname)) {
