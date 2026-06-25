@@ -258,9 +258,7 @@ export default function ProposalPage() {
               </h1>
 
               <p className="mx-auto mt-6 max-w-3xl text-pretty text-base leading-8 text-slate-300 sm:text-lg">
-                Uma visão mobile first da proposta da WV Tech Solutions: consultoria técnica,
-                desenho de processos, automação, integração de dados, governança e módulos
-                reutilizáveis para operações de campo.
+                Uma proposta da WV Tech Solutions para estruturar processos, integrar dados, automatizar rotinas e criar módulos reutilizáveis para operações de trade marketing..
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
