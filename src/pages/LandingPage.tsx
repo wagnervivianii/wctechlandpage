@@ -278,7 +278,7 @@ export default function LandingPage({ mobileMenuOpen, setMobileMenuOpen }: Landi
                   href="/proposta"
                   className="w-full rounded-full border border-cyan-300/25 bg-cyan-400/10 px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/14 sm:w-auto"
                 >
-                  Ver proposta Trade Hub
+                  Ver proposta
                 </a>
                 <button
                   type="button"
